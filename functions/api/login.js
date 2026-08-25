@@ -1,34 +1,31 @@
-import bcrypt from "bcryptjs";
+import bcrypt from 'bcryptjs-es';
 
-export async function onRequestPost({ request, env }) {
-  let username, password;
+export async function onRequest(context) {
+  const { request, env } = context;
+  const { DB } = env;
 
-  try {
-    ({ username, password } = await request.json());
-  } catch {
-    return Response.json({ ok: false, msg: "请求格式错误" });
+  if (request.method !== 'POST') {
+    return Response.json({ ok: false, msg: 'Method not allowed' });
   }
 
-  if (!/^\d{4}$/.test(username) || !password) {
-    return Response.json({ ok: false, msg: "账号或密码格式错误" });
-  }
+  const { username, password } = await request.json();
 
-  const user = await env.DB.prepare(
+  const user = await DB.prepare(
     `SELECT id, username, nickname, points, is_admin, password_hash, banned
      FROM users WHERE username = ?`
   ).bind(username).first();
 
   if (!user) {
-    return Response.json({ ok: false, msg: "账号或密码错误" });
+    return Response.json({ ok: false, msg: '账号或密码错误' });
   }
 
   if (user.banned === 1) {
-    return Response.json({ ok: false, msg: "账号已被封禁" });
+    return Response.json({ ok: false, msg: '账号已被封禁' });
   }
 
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) {
-    return Response.json({ ok: false, msg: "账号或密码错误" });
+    return Response.json({ ok: false, msg: '账号或密码错误' });
   }
 
   return Response.json({
@@ -39,7 +36,6 @@ export async function onRequestPost({ request, env }) {
       nickname: user.nickname,
       points: user.points,
       is_admin: user.is_admin
-      // ✅ 不返回 password_hash
     }
   });
 }
