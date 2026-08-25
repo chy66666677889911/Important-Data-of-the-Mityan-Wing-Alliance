@@ -1,22 +1,28 @@
-export async function onRequestPost({ request, env }) {
+export async function onRequest(context) {
+  const { request, env } = context;
+  const { DB } = env;
+
+  if (request.method !== 'POST') {
+    return Response.json({ ok: false, msg: 'Method not allowed' });
+  }
+
   const { userId } = await request.json();
+  const today = new Date().toISOString().split('T')[0];
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const last = await env.DB.prepare(
+  const user = await DB.prepare(
     `SELECT last_checkin FROM users WHERE id = ?`
   ).bind(userId).first();
 
-  if (last?.last_checkin === today) {
-    return Response.json({ ok: false, msg: "今日已签到" });
+  if (user.last_checkin === today) {
+    return Response.json({ ok: false, msg: '今日已签到' });
   }
 
-  await env.DB.prepare(
+  await DB.prepare(
     `UPDATE users
      SET points = points + 10,
          last_checkin = ?
      WHERE id = ?`
   ).bind(today, userId).run();
 
-  return Response.json({ ok: true, msg: "签到成功", added: 10 });
+  return Response.json({ ok: true, msg: '签到成功', added: 10 });
 }
