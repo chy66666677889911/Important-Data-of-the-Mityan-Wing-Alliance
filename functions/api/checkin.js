@@ -8,13 +8,8 @@ export async function onRequestPost({ request, env }) {
 
   if (exist) return Response.json({ ok: false, msg: "今日已签到" });
 
-  await env.DB.prepare(
-    "UPDATE users SET points = points + 10 WHERE id = ?"
-  ).bind(userId).run();
+  await env.DB.prepare("UPDATE users SET points = points + 10 WHERE id = ?").bind(userId).run();
+  await env.DB.prepare("INSERT INTO checkin (user_id, date) VALUES (?, ?)").bind(userId, today).run();
 
-  await env.DB.prepare(
-    "INSERT INTO checkin (user_id, date) VALUES (?, ?)"
-  ).bind(userId, today).run();
-
-  return Response.json({ ok: true, points: 10 });
+  return Response.json({ ok: true, msg: "签到成功 +10 积分" });
 }
