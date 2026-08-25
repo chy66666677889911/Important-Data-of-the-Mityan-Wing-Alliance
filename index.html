@@ -31,14 +31,14 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <div id="loginBox">
 <input id="loginUser" class="input" placeholder="4位数字ID">
 <input id="loginPass" class="input" type="password" placeholder="密码">
-<button class="btn" style="width:100%" onclick="fakeLogin()">登 录</button>
+<button class="btn" style="width:100%" onclick="login()">登 录</button>
 <p style="margin-top:14px;text-align:center;font-size:13px;color:var(--muted);cursor:pointer" onclick="showRegister()">没有账号？立即注册</p>
 </div>
 <div id="registerBox" class="hidden">
 <input id="regUser" class="input" placeholder="4位数字ID">
 <input id="regNick" class="input" placeholder="昵称">
 <input id="regPass" class="input" type="password" placeholder="密码">
-<button class="btn" style="width:100%" onclick="fakeRegister()">注 册</button>
+<button class="btn" style="width:100%" onclick="register()">注 册</button>
 <p style="margin-top:14px;text-align:center;font-size:13px;color:var(--muted);cursor:pointer" onclick="showLogin()">已有账号？立即登录</p>
 </div>
 </div>
@@ -54,19 +54,20 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <button class="nav-btn" onclick="showPage('rank')">🏆 排行榜</button>
 </div>
 <div id="home" class="page">
-<div class="card"><h3>欢迎，测试飞行员</h3><p>这是纯前端兜底版本</p></div>
+<div class="card"><h3>欢迎，<span id="nickname">-</span></h3><p>当前为登录测试版本</p></div>
 </div>
-<div id="events" class="page hidden"><div class="card"><p>连飞活动（模拟）</p></div></div>
-<div id="chat" class="page hidden"><div class="card"><p>塔台通讯（模拟）</p></div></div>
-<div id="weather" class="page hidden"><div class="card"><p>气象情报（模拟）</p></div></div>
-<div id="honors" class="page hidden"><div class="card"><p>荣誉墙（模拟）</p></div></div>
-<div id="rank" class="page hidden"><div class="card"><p>排行榜（模拟）</p></div></div>
+<div id="events" class="page hidden"><div class="card"><p>连飞活动（待后端）</p></div></div>
+<div id="chat" class="page hidden"><div class="card"><p>塔台通讯（待后端）</p></div></div>
+<div id="weather" class="page hidden"><div class="card"><p>气象情报（待后端）</p></div></div>
+<div id="honors" class="page hidden"><div class="card"><p>荣誉墙（待后端）</p></div></div>
+<div id="rank" class="page hidden"><div class="card"><p>排行榜（待后端）</p></div></div>
 </div>
 </div>
 
 <script>
-const fakeLogin=()=>{alert("✅ 登录按钮已生效（纯前端模式）");document.getElementById("authOverlay").classList.add("hidden");document.getElementById("mainApp").classList.remove("hidden")};
-const fakeRegister=()=>alert("✅ 注册按钮已生效（纯前端模式）");
+let user=null;
+const login=async()=>{const u=document.getElementById("loginUser").value.trim(),p=document.getElementById("loginPass").value;if(!u||!p){alert("请输入账号和密码");return}try{const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});const d=await r.json();alert("登录结果："+d.msg);if(d.ok){user=d.user;localStorage.setItem("mt_user",JSON.stringify(user));document.getElementById("authOverlay").classList.add("hidden");document.getElementById("mainApp").classList.remove("hidden");document.getElementById("nickname").innerText=user.nickname}}catch(e){alert("请求失败："+e.message)}};
+const register=()=>alert("注册功能暂未开放，请先测试登录");
 const showRegister=()=>{document.getElementById("loginBox").classList.add("hidden");document.getElementById("registerBox").classList.remove("hidden")};
 const showLogin=()=>{document.getElementById("registerBox").classList.add("hidden");document.getElementById("loginBox").classList.remove("hidden")};
 const showPage=id=>{document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));document.querySelector(`.nav-btn[onclick="showPage('${id}')"]`)?.classList.add("active")};
