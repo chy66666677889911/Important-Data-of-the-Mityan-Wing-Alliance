@@ -42,8 +42,16 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
     <div id="loginBox">
       <input id="loginUser" class="input" placeholder="4位数字ID">
       <input id="loginPass" class="input" type="password" placeholder="密码">
+
+      <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;margin-bottom:12px">
+        <input type="checkbox" id="rememberMe" style="margin-right:6px">
+        记住我（30天内自动登录）
+      </label>
+
       <button class="btn" onclick="login()">登 录</button>
-      <p style="margin-top:14px;font-size:13px;color:var(--muted);cursor:pointer" onclick="showRegister()">没有账号？立即注册</p>
+      <p style="margin-top:14px;font-size:13px;color:var(--muted);cursor:pointer" onclick="showRegister()">
+        没有账号？立即注册
+      </p>
     </div>
 
     <div id="registerBox" class="hidden">
@@ -51,7 +59,9 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
       <input id="regNick" class="input" placeholder="昵称">
       <input id="regPass" class="input" type="password" placeholder="密码">
       <button class="btn" onclick="register()">注 册</button>
-      <p style="margin-top:14px;font-size:13px;color:var(--muted);cursor:pointer" onclick="showLogin()">已有账号？立即登录</p>
+      <p style="margin-top:14px;font-size:13px;color:var(--muted);cursor:pointer" onclick="showLogin()">
+        已有账号？立即登录
+      </p>
     </div>
   </div>
 </div>
@@ -165,6 +175,7 @@ let user = null, currentEventId = null;
 const login = async () => {
   const username = document.getElementById("loginUser").value.trim();
   const password = document.getElementById("loginPass").value;
+  const remember = document.getElementById("rememberMe").checked;
 
   if (!/^\d{4}$/.test(username)) {
     alert("账号必须是4位数字");
@@ -189,7 +200,16 @@ const login = async () => {
     }
 
     user = d.user;
-    localStorage.setItem("mt_user", JSON.stringify(user));
+
+    if (remember) {
+      // ✅ 30天内自动登录
+      localStorage.setItem("mt_user", JSON.stringify(user));
+    } else {
+      // ✅ 关闭浏览器即失效
+      sessionStorage.setItem("mt_user", JSON.stringify(user));
+      localStorage.removeItem("mt_user");
+    }
+
     location.reload();
   } catch {
     alert("登录请求失败");
@@ -222,7 +242,18 @@ const register = async () => {
   if (d.ok) showLogin();
 };
 
-/* ========= 登录态 ========= */
+/* ========= 登录态初始化 ========= */
+window.onload = () => {
+  const u =
+    localStorage.getItem("mt_user") ||
+    sessionStorage.getItem("mt_user");
+
+  if (u) {
+    user = JSON.parse(u);
+    doLogin();
+  }
+};
+
 const doLogin = () => {
   document.getElementById("authOverlay").classList.add("hidden");
   document.getElementById("mainApp").classList.remove("hidden");
@@ -243,15 +274,6 @@ const showPage = id => {
   document.getElementById(id).classList.add("active");
 };
 
-/* ========= 初始化 ========= */
-window.onload = () => {
-  const u = localStorage.getItem("mt_user");
-  if (u) {
-    user = JSON.parse(u);
-    doLogin();
-  }
-};
-
 const showRegister = () => {
   document.getElementById("loginBox").classList.add("hidden");
   document.getElementById("registerBox").classList.remove("hidden");
@@ -262,30 +284,12 @@ const showLogin = () => {
 };
 
 const logout = () => {
-  localStorage.clear();
+  localStorage.removeItem("mt_user");
+  sessionStorage.removeItem("mt_user");
   location.reload();
 };
 
-/* ========= 其他功能占位 ========= */
+/* ========= 功能占位 ========= */
 const checkin = async () => {
   const d = await (await fetch("/api/checkin", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId: user.id })
-  })).json();
-  alert(d.msg);
-};
-
-const loadEvents = async () => {
-  const list = await (await fetch("/api/events/list")).json();
-  document.getElementById("eventList").innerHTML =
-    list.length ? list.map(e => `
-      <div style="margin-bottom:12px">
-        <b>${e.title}</b>
-        <p style="color:var(--muted);font-size:13px">${e.description}</p>
-        <button class="btn" onclick="openSignup(${e.id})">报名参加</button>
-      </div>
-    `).join("") : "暂无活动";
-};
-
-c
+    method: "
