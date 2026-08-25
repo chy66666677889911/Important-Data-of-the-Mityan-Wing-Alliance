@@ -1,16 +1,24 @@
 export async function onRequestPost({ request, env }) {
   const { targetUserId, adminId } = await request.json();
 
-  const admin = await env.DB.prepare(
-    `SELECT is_admin FROM users WHERE id = ?`
-  ).bind(adminId).first();
+  if (targetUserId == adminId) {
+    return Response.json({ ok: false, msg: "不能封禁自己" });
+  }
 
-  if (!admin || admin.is_admin !== 1) {
-    return Response.json({ ok: false, msg: "权限不足" });
+  const target = await env.DB.prepare(
+    `SELECT is_admin FROM users WHERE id = ?`
+  ).bind(targetUserId).first();
+
+  if (!target) {
+    return Response.json({ ok: false, msg: "用户不存在" });
+  }
+
+  if (target.is_admin === 1) {
+    return Response.json({ ok: false, msg: "不能封禁管理员" });
   }
 
   await env.DB.prepare(
-    `DELETE FROM users WHERE id = ?`
+    `UPDATE users SET banned = 1 WHERE id = ?`
   ).bind(targetUserId).run();
 
   return Response.json({ ok: true, msg: "用户已封禁" });
