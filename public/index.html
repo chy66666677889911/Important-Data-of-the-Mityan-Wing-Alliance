@@ -11,68 +11,38 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
 body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
-
-/* 侧边栏 */
 .sidebar{width:220px;background:var(--sidebar);padding:24px 16px;border-right:1px solid #1e293b}
-.sidebar h1{color:var(--green);font-size:20px;margin-bottom:32px;letter-spacing:1px}
+.sidebar h1{color:var(--green);font-size:20px;margin-bottom:32px}
 .sidebar button{width:100%;background:none;border:1px solid #334155;color:var(--text);padding:10px 12px;border-radius:6px;margin-bottom:10px;cursor:pointer;text-align:left;font-size:14px}
 .sidebar button:hover,.sidebar button.active{background:var(--accent);color:#0b1120;border-color:var(--accent)}
-
-/* 主区域 */
 .main{flex:1;display:flex;flex-direction:column}
 .header{height:56px;background:var(--card);border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
 .header span{color:var(--green);font-weight:500}
 .content{flex:1;padding:24px;overflow-y:auto}
-
-/* 卡片 */
 .card{background:var(--card);border:1px solid #1e293b;border-radius:10px;padding:20px;margin-bottom:20px}
 .card h3{color:var(--green);margin-bottom:12px;font-size:16px}
-.input,textarea,select{width:100%;padding:10px;background:var(--bg);border:1px solid #334155;color:var(--text);border-radius:6px;margin-bottom:12px;font-size:14px}
+.input,textarea{width:100%;padding:10px;background:var(--bg);border:1px solid #334155;color:var(--text);border-radius:6px;margin-bottom:12px}
 .btn{background:linear-gradient(90deg,var(--accent),var(--green));color:#0b1120;padding:10px 16px;border:none;border-radius:6px;font-weight:600;cursor:pointer}
-.btn:hover{opacity:.9}
-
-/* 登录遮罩 */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999}
-.auth-box{background:var(--card);padding:36px 32px;border-radius:12px;width:360px;border:1px solid #334155}
-.auth-box h2{color:var(--green);text-align:center;margin-bottom:24px;font-size:22px}
 .hidden{display:none!important}
 .page{display:none}
 .page.active{display:block}
-
-/* 聊天 */
-.chat-box{height:220px;overflow-y:auto;background:var(--bg);padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid #334155}
-.chat-box div{padding:6px 0;border-bottom:1px solid #1e293b;font-size:13px}
-
-/* 响应式 */
-@media(max-width:768px){.sidebar{display:none}}
+.admin-only{display:none}
 </style>
 </head>
 <body>
 
-<!-- 登录 -->
 <div id="authOverlay" class="overlay">
-  <div class="auth-box">
-    <h2>✈️ 弥天翼航空联盟</h2>
-    <div id="loginBox">
-      <input id="loginUser" class="input" placeholder="4位数字ID">
-      <input id="loginPass" class="input" type="password" placeholder="密码">
-      <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px">
-        <input type="checkbox" id="remember"> 记住我
-      </label>
-      <button class="btn" onclick="login()">登 录</button>
-      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleAuth()">没有账号？注册</div>
-    </div>
-    <div id="registerBox" class="hidden">
-      <input id="regUser" class="input" placeholder="4位数字ID">
-      <input id="regNick" class="input" placeholder="飞行员呼号">
-      <input id="regPass" class="input" type="password" placeholder="密码">
-      <button class="btn" onclick="register()">注 册</button>
-      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--accent);cursor:pointer" onclick="toggleAuth()">已有账号？登录</div>
-    </div>
+  <div class="card" style="width:360px">
+    <h3>✈️ 弥天翼航空联盟</h3>
+    <input id="loginUser" class="input" placeholder="4位数字ID">
+    <input id="loginPass" class="input" type="password" placeholder="密码">
+    <label style="font-size:13px;color:var(--muted);display:flex;gap:6px">
+      <input type="checkbox" id="remember"> 记住我
+    </label>
+    <button class="btn" onclick="login()">登 录</button>
   </div>
 </div>
 
-<!-- 主界面 -->
 <div class="main hidden" id="mainApp">
   <div class="sidebar">
     <h1>弥天翼</h1>
@@ -83,69 +53,28 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
     <button onclick="showPage('honors')">🎖 荣誉墙</button>
     <button onclick="showPage('rank')">🏆 排行榜</button>
     <button onclick="checkin()">📌 每日签到</button>
+    <button class="admin-only" onclick="showPage('admin')">🛡 联盟管理</button>
   </div>
 
   <div class="content">
     <div class="header">
-      <span>弥天翼航空联盟 · 模拟飞行平台</span>
+      <span>弥天翼航空联盟</span>
       <span id="headerUser"></span>
     </div>
 
     <div id="home" class="page active">
       <div class="card">
-        <h3>欢迎回来</h3>
-        <p>呼号：<b id="nickname"></b></p>
-        <p>联盟积分：<b id="points"></b></p>
+        <h3>欢迎回来，<span id="nickname"></span></h3>
+        <p>积分：<b id="points"></b></p>
+        <p id="localWeather" style="margin-top:10px;color:var(--green)"></p>
         <button class="btn" onclick="logout()">退出登录</button>
       </div>
     </div>
 
-    <div id="events" class="page">
+    <div id="admin" class="page">
       <div class="card">
-        <h3>连飞活动</h3>
-        <input id="evTitle" placeholder="活动标题">
-        <textarea id="evDesc" placeholder="活动说明"></textarea>
-        <button class="btn" onclick="createEvent()">发布活动</button>
-        <div id="eventList"></div>
-      </div>
-    </div>
-
-    <div id="chat" class="page">
-      <div class="card">
-        <h3>塔台通讯</h3>
-        <div class="chat-box" id="chatBox"></div>
-        <div style="display:flex;gap:10px">
-          <input id="chatInput" class="input" placeholder="输入消息">
-          <button class="btn" onclick="sendChat()">发送</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="weather" class="page">
-      <div class="card">
-        <h3>气象情报</h3>
-        <div style="display:flex;gap:10px">
-          <input id="icao" class="input" placeholder="ICAO 机场代码">
-          <button class="btn" onclick="queryWeather()">查询</button>
-        </div>
-        <pre id="weatherResult" style="margin-top:12px;background:#0b1120;padding:12px;border-radius:6px;border:1px solid #334155"></pre>
-      </div>
-    </div>
-
-    <div id="honors" class="page">
-      <div class="card">
-        <h3>荣誉墙</h3>
-        <input id="honorTitle" class="input" placeholder="荣誉名称">
-        <textarea id="honorDesc" placeholder="荣誉说明"></textarea>
-        <button class="btn" onclick="addHonor()">添加荣誉</button>
-        <div id="honorList"></div>
-      </div>
-    </div>
-
-    <div id="rank" class="page">
-      <div class="card">
-        <h3>飞行员排行榜</h3>
-        <div id="rankList"></div>
+        <h3>联盟管理</h3>
+        <p>仅管理员可见</p>
       </div>
     </div>
   </div>
@@ -153,87 +82,49 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 
 <script>
 let user=null;
-const api=async(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
-
-const toggleAuth=()=>{
-  loginBox.classList.toggle('hidden');
-  registerBox.classList.toggle('hidden');
-};
 
 const login=async()=>{
   const u=loginUser.value.trim(),p=loginPass.value;
-  if(!/^\d{4}$/.test(u))return alert('4位数字ID');
-  const d=await api('/api/login',{username:u,password:p});
+  if(!/^\d{4}$/.test(u))return alert("4位数字ID");
+  const d=await fetch("/api/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username:u,password:p})
+  }).then(r=>r.json());
+
   if(!d.ok)return alert(d.msg);
   user=d.user;
-  if(remember.checked)localStorage.setItem('mt_user',JSON.stringify(user));
+  if(remember.checked)localStorage.setItem("mt_user",JSON.stringify(user));
   doLogin();
 };
 
-const register=async()=>{
-  const d=await api('/api/register',{
-    username:regUser.value.trim(),
-    nickname:regNick.value.trim(),
-    password:regPass.value
-  });
-  alert(d.msg);
-  if(d.ok)toggleAuth();
-};
-
 const doLogin=()=>{
-  authOverlay.classList.add('hidden');
-  mainApp.classList.remove('hidden');
-  headerUser.innerText='👤 '+user.nickname;
+  authOverlay.classList.add("hidden");
+  mainApp.classList.remove("hidden");
+  headerUser.innerText="👤 "+user.nickname;
   nickname.innerText=user.nickname;
   points.innerText=user.points;
-  loadRank();
+
+  if(user.is_admin){
+    document.querySelectorAll(".admin-only").forEach(e=>e.style.display="block");
+  }
+
+  // ✅ 获取当前地区天气
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const r=await fetch(`/api/weather-geo?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`).then(r=>r.json());
+    if(r.ok) localWeather.innerText=`📍 ${r.city} 当前气温 ${r.temperature}`;
+  });
+};
+
+const showPage=(id)=>{
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 };
 
 const logout=()=>{localStorage.clear();location.reload();};
 
-const showPage=(id)=>{
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));
-};
-
-const checkin=async()=>{
-  const d=await api('/api/checkin',{userId:user.id});
-  alert(d.msg);
-};
-
-const sendChat=async()=>{
-  await api('/api/chat',{nickname:user.nickname,message:chatInput.value});
-  chatInput.value='';loadChat();
-};
-
-const loadChat=async()=>{
-  const d=await(await fetch('/api/chat')).json();
-  chatBox.innerHTML=d.map(c=>`<div><b>${c.nickname}:</b> ${c.message}</div>`).join('');
-};
-
-const queryWeather=async()=>{
-  const d=await(await fetch('/api/weather?icao='+icao.value)).json();
-  weatherResult.innerText=d.metar+'\n'+d.taf;
-};
-
-const createEvent=async()=>{
-  await api('/api/events',{title:evTitle.value,description:evDesc.value,userId:user.id});
-  alert('发布成功');
-};
-
-const addHonor=async()=>{
-  await api('/api/honors',{title:honorTitle.value,description:honorDesc.value,userId:user.id});
-  alert('添加成功');
-};
-
-const loadRank=async()=>{
-  const d=await(await fetch('/api/rank')).json();
-  rankList.innerHTML=d.map(u=>`<div>${u.nickname} — ${u.points} 分</div>`).join('');
-};
-
 window.onload=()=>{
-  const u=localStorage.getItem('mt_user');
+  const u=localStorage.getItem("mt_user");
   if(u){user=JSON.parse(u);doLogin();}
 };
 </script>
