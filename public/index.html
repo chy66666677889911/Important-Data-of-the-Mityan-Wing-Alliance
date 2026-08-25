@@ -34,6 +34,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 </head>
 <body>
 
+<!-- 登录/注册 -->
 <div id="authOverlay" class="modal">
   <div class="modal-box">
     <h2 style="color:var(--accent);margin-bottom:16px">✈️ 弥天翼航空联盟</h2>
@@ -55,6 +56,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
   </div>
 </div>
 
+<!-- 主界面 -->
 <div id="mainApp" class="main hidden">
   <div class="sidebar">
     <h1>弥天翼</h1>
@@ -144,6 +146,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
   </div>
 </div>
 
+<!-- 报名弹窗 -->
 <div id="signupModal" class="modal hidden">
   <div class="modal-box">
     <h3>活动报名</h3>
@@ -156,101 +159,133 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 </div>
 
 <script>
-let user=null,currentEventId=null;
+let user = null, currentEventId = null;
 
-const api=async(url,body)=>fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(r=>r.json());
+/* ========= 登录 ========= */
+const login = async () => {
+  const username = document.getElementById("loginUser").value.trim();
+  const password = document.getElementById("loginPass").value;
 
-const showRegister=()=>{loginBox.classList.add("hidden");registerBox.classList.remove("hidden")};
-const showLogin=()=>{registerBox.classList.add("hidden");loginBox.classList.remove("hidden")};
+  if (!/^\d{4}$/.test(username)) {
+    alert("账号必须是4位数字");
+    return;
+  }
+  if (!password) {
+    alert("请输入密码");
+    return;
+  }
 
-const login=async()=>{
-  const d=await api("/api/login",{username:loginUser.value.trim(),password:loginPass.value});
-  if(!d.ok)return alert(d.msg);
-  user=d.user;localStorage.setItem("mt_user",JSON.stringify(user));doLogin();
-};
-
-const register=async()=>{
-  const d=await api("/api/register",{username:regUser.value.trim(),nickname:regNick.value.trim(),password:regPass.value});
-  alert(d.msg);if(d.ok)showLogin();
-};
-
-const doLogin=()=>{
-  authOverlay.classList.add("hidden");mainApp.classList.remove("hidden");
-  headerUser.innerText="👤 "+user.nickname;
-  nickname.innerText=user.nickname;points.innerText=user.points;
-  if(user.is_admin)document.querySelectorAll(".admin-only").forEach(e=>e.style.display="block");
-  loadEvents();getLocalWeather();
-};
-
-const showPage=id=>{
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-};
-
-const logout=()=>{localStorage.clear();location.reload()};
-
-const loadEvents=async()=>{
-  const list=await(await fetch("/api/events/list")).json();
-  eventList.innerHTML=list.length?list.map(e=>`
-    <div style="margin-bottom:12px">
-      <b>${e.title}</b>
-      <p style="color:var(--muted);font-size:13px">${e.description}</p>
-      <button class="btn" onclick="openSignup(${e.id})">报名参加</button>
-    </div>
-  `).join(""):"暂无活动";
-};
-
-const createEvent=async()=>{
-  await api("/api/events",{title:evTitle.value,description:evDesc.value,userId:user.id});
-  alert("活动已发布");loadEvents();showPage("events");
-};
-
-const openSignup=id=>{currentEventId=id;signupModal.classList.remove("hidden")};
-const closeSignup=()=>signupModal.classList.add("hidden");
-
-const submitSignup=async()=>{
-  await api("/api/event-signup",{eventId:currentEventId,userId:user.id,callsign:callsign.value,aircraft:aircraft.value,parking:parking.value});
-  alert("报名成功");closeSignup();
-};
-
-const banUser=async()=>{
-  await api("/api/admin/ban",{targetUserId:banId.value,adminId:user.id});
-  alert("操作完成");
-};
-
-const checkin=async()=>{
-  const d=await api("/api/checkin",{userId:user.id});
-  alert(d.msg);
-};
-
-const getLocalWeather=()=>{
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      const r=await fetch(`/api/weather-geo?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`).then(r=>r.json());
-      localWeather.innerText=`📍 ${r.city} ${r.temperature}℃`;
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
     });
+
+    const d = await res.json();
+    if (!d.ok) {
+      alert(d.msg || "登录失败");
+      return;
+    }
+
+    user = d.user;
+    localStorage.setItem("mt_user", JSON.stringify(user));
+    location.reload();
+  } catch {
+    alert("登录请求失败");
   }
 };
 
-const queryWeather=async()=>{
-  const d=await(await fetch("/api/weather?icao="+icao.value)).json();
-  weatherResult.innerText=d.metar+"\n"+d.taf;
+/* ========= 注册 ========= */
+const register = async () => {
+  const username = document.getElementById("regUser").value.trim();
+  const nickname = document.getElementById("regNick").value.trim();
+  const password = document.getElementById("regPass").value;
+
+  if (!/^\d{4}$/.test(username)) {
+    alert("账号必须是4位数字");
+    return;
+  }
+  if (!nickname || !password) {
+    alert("请填写完整信息");
+    return;
+  }
+
+  const res = await fetch("/api/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, nickname, password })
+  });
+
+  const d = await res.json();
+  alert(d.msg);
+  if (d.ok) showLogin();
 };
 
-const sendChat=async()=>{
-  await api("/api/chat",{nickname:user.nickname,message:chatInput.value});
-  chatInput.value="";loadChat();
+/* ========= 登录态 ========= */
+const doLogin = () => {
+  document.getElementById("authOverlay").classList.add("hidden");
+  document.getElementById("mainApp").classList.remove("hidden");
+  document.getElementById("headerUser").innerText = "👤 " + user.nickname;
+  document.getElementById("nickname").innerText = user.nickname;
+  document.getElementById("points").innerText = user.points;
+
+  if (user.is_admin) {
+    document.querySelectorAll(".admin-only").forEach(e => e.style.display = "block");
+  }
+
+  loadEvents();
 };
 
-const loadChat=async()=>{
-  const d=await(await fetch("/api/chat")).json();
-  chatBox.innerHTML=d.map(c=>`<div><b>${c.nickname}:</b> ${c.message}</div>`).join("");
+/* ========= 页面切换 ========= */
+const showPage = id => {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 };
 
-const addHonor=async()=>{
-  await api("/api/honors",{title:honorTitle.value,description:honorDesc.value,userId:user.id});
-  alert("添加成功");loadHonors();
+/* ========= 初始化 ========= */
+window.onload = () => {
+  const u = localStorage.getItem("mt_user");
+  if (u) {
+    user = JSON.parse(u);
+    doLogin();
+  }
 };
 
-const loadHonors=async()=>{
-  const d=await(await fetch("/api/honors")).json();
+const showRegister = () => {
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("registerBox").classList.remove("hidden");
+};
+const showLogin = () => {
+  document.getElementById("registerBox").classList.add("hidden");
+  document.getElementById("loginBox").classList.remove("hidden");
+};
+
+const logout = () => {
+  localStorage.clear();
+  location.reload();
+};
+
+/* ========= 其他功能占位 ========= */
+const checkin = async () => {
+  const d = await (await fetch("/api/checkin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId: user.id })
+  })).json();
+  alert(d.msg);
+};
+
+const loadEvents = async () => {
+  const list = await (await fetch("/api/events/list")).json();
+  document.getElementById("eventList").innerHTML =
+    list.length ? list.map(e => `
+      <div style="margin-bottom:12px">
+        <b>${e.title}</b>
+        <p style="color:var(--muted);font-size:13px">${e.description}</p>
+        <button class="btn" onclick="openSignup(${e.id})">报名参加</button>
+      </div>
+    `).join("") : "暂无活动";
+};
+
+c
