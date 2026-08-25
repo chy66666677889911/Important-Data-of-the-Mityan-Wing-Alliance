@@ -1,9 +1,5 @@
 {
   "name": "mtyafa-platform",
   "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "bcryptjs-es": "^1.0.1"
-  }
+  "private": true
 }
-
