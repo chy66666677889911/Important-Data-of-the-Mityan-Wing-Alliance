@@ -1,14 +1,40 @@
 export async function onRequest(context) {
   const { request, env } = context;
   const { DB } = env;
-  if (request.method !== 'POST') return Response.json({ ok: false, msg: 'Method not allowed' });
+
+  if (request.method !== 'POST') {
+    return Response.json({ ok: false, msg: 'Method not allowed' });
+  }
+
   const { targetUserId, adminId } = await request.json();
-  if (targetUserId == adminId) return Response.json({ ok: false, msg: '不能封禁自己' });
-  const admin = await DB.prepare(`SELECT is_admin FROM users WHERE id = ?`).bind(adminId).first();
-  if (!admin || admin.is_admin !== 1) return Response.json({ ok: false, msg: '权限不足' });
-  const target = await DB.prepare(`SELECT is_admin FROM users WHERE id = ?`).bind(targetUserId).first();
-  if (!target) return Response.json({ ok: false, msg: '用户不存在' });
-  if (target.is_admin === 1) return Response.json({ ok: false, msg: '不能封禁管理员' });
-  await DB.prepare(`UPDATE users SET banned = 1 WHERE id = ?`).bind(targetUserId).run();
+
+  if (targetUserId == adminId) {
+    return Response.json({ ok: false, msg: '不能封禁自己' });
+  }
+
+  const admin = await DB.prepare(
+    `SELECT is_admin FROM users WHERE id = ?`
+  ).bind(adminId).first();
+
+  if (!admin || admin.is_admin !== 1) {
+    return Response.json({ ok: false, msg: '权限不足' });
+  }
+
+  const target = await DB.prepare(
+    `SELECT is_admin FROM users WHERE id = ?`
+  ).bind(targetUserId).first();
+
+  if (!target) {
+    return Response.json({ ok: false, msg: '用户不存在' });
+  }
+
+  if (target.is_admin === 1) {
+    return Response.json({ ok: false, msg: '不能封禁管理员' });
+  }
+
+  await DB.prepare(
+    `UPDATE users SET banned = 1 WHERE id = ?`
+  ).bind(targetUserId).run();
+
   return Response.json({ ok: true, msg: '用户已封禁' });
 }
