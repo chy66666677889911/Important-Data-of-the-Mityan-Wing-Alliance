@@ -1,3 +1,5 @@
+import bcrypt from "bcryptjs";
+
 export async function onRequestPost({ request, env }) {
   const { username, nickname, password } = await request.json();
 
@@ -13,10 +15,12 @@ export async function onRequestPost({ request, env }) {
     return Response.json({ ok: false, msg: "该ID已被注册" });
   }
 
+  const hash = await bcrypt.hash(password, 10);
+
   await env.DB.prepare(
-    `INSERT INTO users (username, password_hash, nickname, points, is_admin)
-     VALUES (?, ?, ?, 0, 0)`
-  ).bind(username, password, nickname).run();
+    `INSERT INTO users (username, password_hash, nickname, points, is_admin, banned)
+     VALUES (?, ?, ?, 0, 0, 0)`
+  ).bind(username, hash, nickname).run();
 
   return Response.json({ ok: true, msg: "注册成功" });
 }
