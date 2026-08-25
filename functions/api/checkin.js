@@ -5,6 +5,7 @@ export async function onRequestPost({ request, env }) {
   const exist = await env.DB.prepare(
     "SELECT id FROM checkin WHERE user_id = ? AND date = ?"
   ).bind(userId, today).first();
+
   if (exist) return Response.json({ ok: false, msg: "今日已签到" });
 
   await env.DB.prepare(
@@ -12,9 +13,8 @@ export async function onRequestPost({ request, env }) {
   ).bind(userId).run();
 
   await env.DB.prepare(
-    "INSERT INTO checkin (user_id, date, consecutive, total) VALUES (?, ?, 1, 1)"
+    "INSERT INTO checkin (user_id, date) VALUES (?, ?)"
   ).bind(userId, today).run();
 
   return Response.json({ ok: true, points: 10 });
 }
-
