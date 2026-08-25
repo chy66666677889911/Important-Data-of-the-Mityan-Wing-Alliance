@@ -1,0 +1,17 @@
+export async function onRequestGet({ env }) {
+  const users = await env.DB.prepare(
+    `SELECT COUNT(*) as c FROM users`
+  ).first();
+
+  const events = await env.DB.prepare(
+    `SELECT COUNT(*) as c FROM events`
+  ).first();
+
+  return Response.json({
+    users: users.c,
+    events: events.c,
+    teams: 3,
+    online: 1
+  });
+}
+
