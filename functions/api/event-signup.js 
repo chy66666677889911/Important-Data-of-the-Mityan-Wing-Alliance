@@ -5,13 +5,10 @@ export async function onRequestPost({ request, env }) {
     "SELECT id FROM event_signups WHERE event_id = ? AND user_id = ?"
   ).bind(eventId, userId).first();
 
-  if (exist) {
-    return Response.json({ ok: false, msg: "已报名" });
-  }
+  if (exist) return Response.json({ ok: false, msg: "已报名" });
 
   await env.DB.prepare(
-    `INSERT INTO event_signups (event_id, user_id, callsign, aircraft, parking)
-     VALUES (?, ?, ?, ?, ?)`
+    "INSERT INTO event_signups (event_id, user_id, callsign, aircraft, parking) VALUES (?, ?, ?, ?, ?)"
   ).bind(eventId, userId, callsign, aircraft, parking).run();
 
   return Response.json({ ok: true, msg: "报名成功" });
