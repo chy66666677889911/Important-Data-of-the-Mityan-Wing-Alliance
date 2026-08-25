@@ -1,25 +1,13 @@
-export async function onRequestGet({ env }) {
-  const list = await env.DB.prepare(
-    `SELECT title, description FROM honors ORDER BY created_at DESC`
-  ).all();
-  return Response.json(list.results);
-}
-
-export async function onRequestPost({ request, env }) {
-  const { title, description, userId } = await request.json();
-
-  const admin = await env.DB.prepare(
-    `SELECT is_admin FROM users WHERE id = ?`
-  ).bind(userId).first();
-
-  if (!admin || admin.is_admin !== 1) {
-    return Response.json({ ok: false, msg: "仅管理员可发布荣誉" });
+export async function onRequest(context) {
+  const { request, env } = context;
+  const { DB } = env;
+  if (request.method === 'POST') {
+    const { title, description, userId } = await request.json();
+    const admin = await DB.prepare(`SELECT is_admin FROM users WHERE id = ?`).bind(userId).first();
+    if (!admin || admin.is_admin !== 1) return Response.json({ ok: false, msg: '权限不足' });
+    await DB.prepare(`INSERT INTO honors (title, description, user_id) VALUES (?, ?, ?)`).bind(title, description, userId).run();
+    return Response.json({ ok: true, msg: '荣誉添加成功' });
   }
-
-  await env.DB.prepare(
-    `INSERT INTO honors (title, description)
-     VALUES (?, ?)`
-  ).bind(title, description).run();
-
-  return Response.json({ ok: true });
+  const list = await DB.prepare(`SELECT * FROM honors ORDER BY created_at DESC`).all();
+  return Response.json(list.results || []);
 }
