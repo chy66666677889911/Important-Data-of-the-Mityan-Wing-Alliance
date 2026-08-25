@@ -1,1 +1,130 @@
-public/index.html 	html<!DOCTYPE html><html lang="zh-CN"><head>  <meta charset="UTF-8">  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>弥天翼联盟 - 航空模拟平台</title>  <style>    :root { --bg: #0b1120; --card: #131b2e; --accent: #3b82f6; --text: #e2e8f0; }    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin:0; display:flex; height:100vh; overflow:hidden; }    .sidebar { width: 220px; background: var(--card); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #1e293b; }    .logo { font-size: 22px; font-weight: bold; color: var(--accent); margin-bottom: 30px; text-align: center; }    .menu-btn { background: none; border: none; color: var(--text); padding: 12px; text-align: left; cursor: pointer; border-radius: 6px; margin-bottom: 5px; }    .menu-btn.active, .menu-btn:hover { background: var(--accent); color: #fff; }    .main { flex: 1; display: flex; flex-direction: column; }    .header { background: var(--card); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }    .content { flex: 1; padding: 30px; overflow-y: auto; }    .page { display: none; }    .page.active { display: block; }    .card { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #1e293b; }    input, button { padding: 10px; border-radius: 6px; border: 1px solid #334155; background: var(--bg); color: var(--text); margin-bottom: 10px; width: 100%; box-sizing: border-box; }    button { background: var(--accent); color: #fff; border: none; cursor: pointer; font-weight: bold; }    button:hover { opacity: 0.9; }    .hidden { display: none !important; }    .flex { display: flex; gap: 10px; }  </style></head><body>  <div class="sidebar">    <div class="logo">✈️ 弥天翼联盟</div>    <button class="menu-btn active" onclick="showPage('homePage', this)">🏠 联盟首页</button>    <button class="menu-btn" onclick="showPage('rankPage', this)">🏆 排行榜</button>    <button class="menu-btn" onclick="showPage('chatPage', this)">💬 塔台通讯</button>    <button class="menu-btn" onclick="showPage('weatherPage', this)">🌤 气象情报</button>    <button class="menu-btn" onclick="showPage('eventPage', this)">📅 连飞活动</button>    <button class="menu-btn" onclick="showPage('honorPage', this)">🎖 荣誉墙</button>  </div>  <div class="main">    <div class="header">      弥天翼联盟控制台      <div id="authArea"><button onclick="toggleAuth()">🔑 登录/注册</button></div>      <div id="userArea" class="hidden"> <button onclick="logout()">退出</button></div>    </div>    <div class="content">            <div id="homePage" class="page active"><div class="card">欢迎来到弥天翼联盟这里是专业的航空模拟飞行与连飞活动平台。</div></div>            <div id="rankPage" class="page"><div class="card">🏆 飞行员排行榜<div id="rankList">加载中...</div></div></div>            <div id="chatPage" class="page"><div class="card">💬 塔台通讯室<div id="chatBox" style="height:200px;overflow-y:auto;background:#000;padding:10px;margin-bottom:10px;"></div><div class="flex"><input id="chatInput" placeholder="输入消息..."><button onclick="sendChat()">发送</button></div></div></div>            <div id="weatherPage" class="page"><div class="card">🌤 METAR/TAF 查询<div class="flex"><input id="icaoInput" placeholder="ICAO代码 (如 ZBAA)"><button onclick="queryWeather()">获取情报</button></div><div id="weatherResult" style="background:#000;padding:10px;margin-top:10px;"></div></div></div>            <div id="eventPage" class="page"><div class="card">📅 连飞活动<input id="evTitle" placeholder="活动标题"><textarea id="evDesc" placeholder="活动描述"></textarea><button onclick="createEvent()">发布活动</button></div><div class="card" id="eventList">加载中...</div></div>            <div id="honorPage" class="page"><div class="card">🎖 添加荣誉<input id="hoTitle" placeholder="奖项名称"><input id="hoImg" placeholder="图片URL"><textarea id="hoDesc" placeholder="奖项描述"></textarea><button onclick="addHonor()">添加荣誉</button></div><div class="card" id="honorList">加载中...</div></div>    </div>  </div>    <div id="authOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;" class="hidden">    <div style="background:#131b2e;padding:30px;border-radius:8px;width:300px;">      <div id="loginBox">登录 (4位数字ID)<input id="loginUser" placeholder="账号 (如 1001)"><input id="loginPass" type="password" placeholder="密码"><div class="flex"><input type="checkbox" id="remember" style="width:auto;"><label for="remember">记住我</label></div><button onclick="login()">登录</button>去注册</div>      <div id="registerBox" class="hidden">注册<input id="regUser" placeholder="4位数字账号"><input id="regPass" type="password" placeholder="密码"><input id="regNick" placeholder="昵称"><button onclick="register()">注册</button>去登录</div>    </div>  </div>  <script>    let user = null;    // 页面切换    function showPage(id, btn) {      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));      document.getElementById(id).classList.add('active');      document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));      if(btn) btn.classList.add('active');      if(id === 'rankPage') loadRank();      if(id === 'chatPage') loadChat();    }    // 登录/注册面板切换    function toggleAuth() {      const overlay = document.getElementById('authOverlay');      const loginBox = document.getElementById('loginBox');      const registerBox = document.getElementById('registerBox');      overlay.classList.toggle('hidden');      if(!overlay.classList.contains('hidden')) {        loginBox.classList.remove('hidden');        registerBox.classList.add('hidden');      }    }    // 登录逻辑 (防报错版)    async function login() {      try {        const u = document.getElementById('loginUser')?.value.trim();        const p = document.getElementById('loginPass')?.value;        if (!u
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>弥天翼联盟</title>
+<style>
+:root{
+  --bg:#0b1120;--card:#131b2e;--accent:#3b82f6;
+  --green:#22d3ee;--text:#e2e8f0;--muted:#94a3b8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+body{background:var(--bg);color:var(--text);height:100vh;display:flex;align-items:center;justify-content:center}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999}
+.auth-box{background:var(--card);padding:36px 32px;border-radius:10px;width:340px;border:1px solid #1e293b}
+.auth-box h2{color:var(--green);text-align:center;margin-bottom:20px;font-size:22px}
+.input{width:100%;padding:10px;margin-bottom:12px;background:var(--bg);border:1px solid #334155;color:var(--text);border-radius:6px;font-size:14px}
+.btn{width:100%;padding:10px;background:var(--accent);color:#0b1120;border:none;border-radius:6px;font-weight:bold;cursor:pointer;font-size:15px}
+.btn:active{transform:scale(.98)}
+.check{font-size:13px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.link{color:var(--accent);font-size:13px;text-align:center;cursor:pointer;margin-top:14px}
+.hidden{display:none!important}
+.main{display:none;padding:40px;width:100%;max-width:900px}
+.main h1{color:var(--green);margin-bottom:10px}
+.main p{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="authOverlay" class="overlay">
+  <div class="auth-box">
+    <div id="loginBox">
+      <h2>✈️ 弥天翼联盟</h2>
+      <input id="loginUser" class="input" placeholder="4位数字ID" maxlength="4">
+      <input id="loginPass" class="input" type="password" placeholder="密码">
+      <label class="check"><input type="checkbox" id="remember"> 记住我</label>
+      <button class="btn" onclick="login()">登 录</button>
+      <div class="link" onclick="toggleAuth()">没有账号？立即注册</div>
+    </div>
+
+    <div id="registerBox" class="hidden">
+      <h2>📝 加入联盟</h2>
+      <input id="regUser" class="input" placeholder="4位数字ID" maxlength="4">
+      <input id="regNick" class="input" placeholder="飞行员呼号">
+      <input id="regPass" class="input" type="password" placeholder="密码">
+      <button class="btn" onclick="register()">注 册</button>
+      <div class="link" onclick="toggleAuth()">已有账号？返回登录</div>
+    </div>
+  </div>
+</div>
+
+<div id="mainApp" class="main">
+  <h1>弥天翼联盟 · 控制中心</h1>
+  <p>欢迎回来，<span id="nickname"></span>。当前积分：<span id="points"></span></p>
+  <button class="btn" style="width:auto;margin-top:20px" onclick="logout()">退出登录</button>
+</div>
+
+<script>
+let user=null;
+
+const toggleAuth=()=>{
+  document.getElementById('loginBox').classList.toggle('hidden');
+  document.getElementById('registerBox').classList.toggle('hidden');
+};
+
+const login=async()=>{
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const r=document.getElementById('remember').checked;
+
+  if(!/^\d{4}$/.test(u)) return alert('账号必须为4位数字ID');
+  if(!p) return alert('请输入密码');
+
+  try{
+    const res=await fetch('/api/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p})
+    });
+    const d=await res.json();
+    if(!d.ok) return alert(d.msg);
+    user=d.user;
+    if(r) localStorage.setItem('mt_user',JSON.stringify(user));
+    doLogin();
+  }catch{
+    alert('登录失败，请检查后端接口');
+  }
+};
+
+const register=async()=>{
+  const u=document.getElementById('regUser').value.trim();
+  const n=document.getElementById('regNick').value.trim();
+  const p=document.getElementById('regPass').value;
+
+  if(!/^\d{4}$/.test(u)) return alert('账号必须为4位数字ID');
+  if(!n||!p) return alert('请填写完整信息');
+
+  try{
+    const res=await fetch('/api/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,nickname:n,password:p})
+    });
+    const d=await res.json();
+    alert(d.msg);
+    if(d.ok) toggleAuth();
+  }catch{
+    alert('注册失败');
+  }
+};
+
+const doLogin=()=>{
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('nickname').innerText=user.nickname;
+  document.getElementById('points').innerText=user.points;
+};
+
+const logout=()=>{
+  localStorage.clear();
+  location.reload();
+};
+
+window.onload=()=>{
+  const u=localStorage.getItem('mt_user');
+  if(u){user=JSON.parse(u);doLogin();}
+};
+</script>
+</body>
+</html>
