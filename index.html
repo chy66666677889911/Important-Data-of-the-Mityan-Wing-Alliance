@@ -160,64 +160,13 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 
 <script>
 let user=null,currentEventId=null;
-
-const login=async()=>{
-const username=document.getElementById("loginUser").value.trim();
-const password=document.getElementById("loginPass").value;
-const remember=document.getElementById("rememberMe").checked;
-if(!/^\d{4}$/.test(username)){alert("账号必须是4位数字");return}
-if(!password){alert("请输入密码");return}
-try{
-const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
-const d=await res.json();
-if(!d.ok){alert(d.msg);return}
-user=d.user;
-if(remember){localStorage.setItem("mt_user",JSON.stringify(user))}else{sessionStorage.setItem("mt_user",JSON.stringify(user))}
-location.reload();
-}catch{alert("登录请求失败")}
-};
-
-const register=async()=>{
-const username=document.getElementById("regUser").value.trim();
-const nickname=document.getElementById("regNick").value.trim();
-const password=document.getElementById("regPass").value;
-if(!/^\d{4}$/.test(username)){alert("账号必须是4位数字");return}
-if(!nickname||!password){alert("请填写完整信息");return}
-const res=await fetch("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,nickname,password})});
-const d=await res.json();
-alert(d.msg);
-if(d.ok)showLogin();
-};
-
-const doLogin=()=>{
-document.getElementById("authOverlay").classList.add("hidden");
-document.getElementById("mainApp").classList.remove("hidden");
-document.getElementById("nickname").innerText=user.nickname;
-document.getElementById("statPoints").innerText=user.points;
-if(user.is_admin){
-document.getElementById("adminBtn").style.display="inline-block";
-document.getElementById("logoutBtn").style.display="inline-block";
-document.getElementById("addHonorBox").style.display="block";
-}
-loadStats();
-loadEvents();
-loadHonors();
-loadRank();
-};
-
-window.onload=()=>{
-const u=localStorage.getItem("mt_user")||sessionStorage.getItem("mt_user");
-if(u){try{user=JSON.parse(u);doLogin();}catch{localStorage.clear();sessionStorage.clear()}}
-};
-
+const login=async()=>{try{const username=document.getElementById("loginUser").value.trim(),password=document.getElementById("loginPass").value;if(!/^\d{4}$/.test(username)){alert("账号必须是4位数字");return}if(!password){alert("请输入密码");return}const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});const d=await res.json();if(!d.ok){alert(d.msg);return}user=d.user;document.getElementById("rememberMe").checked?localStorage.setItem("mt_user",JSON.stringify(user)):sessionStorage.setItem("mt_user",JSON.stringify(user));location.reload()}catch(e){alert("登录失败，请检查控制台");console.error(e)}};
+const register=async()=>{const username=document.getElementById("regUser").value.trim(),nickname=document.getElementById("regNick").value.trim(),password=document.getElementById("regPass").value;if(!/^\d{4}$/.test(username)){alert("账号必须是4位数字");return}if(!nickname||!password){alert("请填写完整信息");return}const res=await fetch("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,nickname,password})});const d=await res.json();alert(d.msg);if(d.ok)showLogin()};
+const doLogin=()=>{document.getElementById("authOverlay").classList.add("hidden");document.getElementById("mainApp").classList.remove("hidden");document.getElementById("nickname").innerText=user.nickname;document.getElementById("statPoints").innerText=user.points;if(user.is_admin){document.getElementById("adminBtn").style.display="inline-block";document.getElementById("logoutBtn").style.display="inline-block";document.getElementById("addHonorBox").style.display="block"}loadStats();loadEvents();loadHonors();loadRank()};
+window.onload=()=>{const u=localStorage.getItem("mt_user")||sessionStorage.getItem("mt_user");if(u){try{user=JSON.parse(u);doLogin()}catch{localStorage.clear();sessionStorage.clear()}}};
 const showRegister=()=>{document.getElementById("loginBox").classList.add("hidden");document.getElementById("registerBox").classList.remove("hidden")};
 const showLogin=()=>{document.getElementById("registerBox").classList.add("hidden");document.getElementById("loginBox").classList.remove("hidden")};
 const logout=()=>{localStorage.clear();sessionStorage.clear();location.reload()};
-const showPage=id=>{
-document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-document.getElementById(id).classList.add("active");
-document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-document.querySelector(`.nav-btn[onclick="showPage('${id}')"]`)?.classList.add("active");
-};
+const showPage=id=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));document.querySelector(`.nav-btn[onclick="showPage('${id}')"]`)?.classList.add("active")};
 const checkin=async()=>{const d=await(await fetch("/api/checkin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id})})).json();alert(d.msg)};
-const loadStats=async()=>{const d=await(await fet
+const loadStats=async()=>{const d=await(await fetch("/api/stats")).json();document.getElementById("statUsers").innerText=d.users;doc
