@@ -24,7 +24,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 .input,textarea{width:100%;padding:10px;background:var(--bg);border:1px solid #334155;color:var(--text);border-radius:6px;margin-bottom:12px}
 .btn{background:linear-gradient(90deg,var(--accent),var(--green));color:#0b1120;padding:10px 16px;border:none;border-radius:6px;font-weight:600;cursor:pointer}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999}
-.modal-box{background:var(--card);padding:24px;width:500px;border-radius:10px;border:1px solid #334155}
+.modal-box{background:var(--card);padding:24px;width:520px;border-radius:10px;border:1px solid #334155}
 .hidden{display:none!important}
 .page{display:none}
 .page.active{display:block}
@@ -67,15 +67,16 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
     <div id="events" class="page">
       <div class="card">
         <h3>连飞活动</h3>
-        <button class="btn" onclick="openSignup()">报名参加活动</button>
+        <div id="eventList">加载中...</div>
       </div>
     </div>
 
     <div id="admin" class="page">
       <div class="card">
-        <h3>联盟管理</h3>
-        <input id="banId" class="input" placeholder="要封禁的用户ID">
-        <button class="btn" onclick="banUser()">封禁用户</button>
+        <h3>发布连飞活动</h3>
+        <input id="evTitle" class="input" placeholder="活动标题">
+        <textarea id="evDesc" class="input" placeholder="活动说明"></textarea>
+        <button class="btn" onclick="createEvent()">发布活动</button>
       </div>
     </div>
   </div>
@@ -93,7 +94,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 </div>
 
 <script>
-let user=null;
+let user=null,currentEventId=null;
 
 const login=async()=>{
   const d=await fetch("/api/login",{
@@ -116,9 +117,38 @@ const doLogin=()=>{
   nickname.innerText=user.nickname;
   points.innerText=user.points;
   if(user.is_admin)document.querySelectorAll(".admin-only").forEach(e=>e.style.display="block");
+  loadEvents();
 };
 
-const openSignup=()=>signupModal.classList.remove("hidden");
+const loadEvents=async()=>{
+  const list=await fetch("/api/events/list").then(r=>r.json());
+  eventList.innerHTML=list.length?list.map(e=>`
+    <div style="margin-bottom:12px">
+      <b>${e.title}</b>
+      <p style="color:var(--muted);font-size:13px">${e.description}</p>
+      <button class="btn" onclick="openSignup(${e.id})">报名参加</button>
+    </div>
+  `).join(""):"暂无活动";
+};
+
+const createEvent=async()=>{
+  await fetch("/api/events",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      title:evTitle.value,
+      description:evDesc.value,
+      userId:user.id
+    })
+  });
+  alert("活动已发布");
+  loadEvents();
+};
+
+const openSignup=id=>{
+  currentEventId=id;
+  signupModal.classList.remove("hidden");
+};
 const closeSignup=()=>signupModal.classList.add("hidden");
 
 const submitSignup=async()=>{
@@ -126,7 +156,7 @@ const submitSignup=async()=>{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      eventId:1,
+      eventId:currentEventId,
       userId:user.id,
       callsign:callsign.value,
       aircraft:aircraft.value,
@@ -135,18 +165,6 @@ const submitSignup=async()=>{
   });
   alert("报名成功");
   closeSignup();
-};
-
-const banUser=async()=>{
-  await fetch("/api/admin/ban",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      targetUserId:banId.value,
-      adminId:user.id
-    })
-  });
-  alert("封禁成功");
 };
 
 const showPage=(id)=>{
