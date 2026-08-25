@@ -5,6 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "mtyafa-db"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "1aa57f87-d13c-4a5a-8f90-43141a77722b"
 
 functions_dir = "functions"
