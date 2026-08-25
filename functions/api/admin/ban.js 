@@ -1,0 +1,16 @@
+export async function onRequestPost({ request, env }) {
+  const { targetUserId, adminId } = await request.json();
+  const admin = await env.DB.prepare(
+    `SELECT is_admin FROM users WHERE id = ?`
+  ).bind(adminId).first();
+
+  if (!admin || admin.is_admin !== 1) {
+    return Response.json({ ok: false, msg: "无权限" });
+  }
+
+  await env.DB.prepare(
+    `UPDATE users SET status = 0 WHERE id = ?`
+  ).bind(targetUserId).run();
+
+  return Response.json({ ok: true, msg: "用户已封禁" });
+}
