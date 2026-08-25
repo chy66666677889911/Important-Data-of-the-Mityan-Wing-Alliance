@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>弥天翼航空联盟</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;font-size:15px}
+.container{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+.box{width:100%;max-width:420px;background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+input{width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;font-size:16px}
+button{border:none;border-radius:8px;padding:12px;width:100%;font-size:15px;cursor:pointer;background:linear-gradient(135deg,#1e90ff,#00bfff);color:#fff}
+.hidden{display:none}
+.rank-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
+.chat-bubble{margin:6px 0;padding:8px 12px;border-radius:10px;max-width:80%}
+.self{background:#1e90ff;color:#fff;margin-left:auto}
+.other{background:#eee}
+</style>
+</head>
+<body>
+
+<div class="container" id="loginPage">
+  <div class="box">
+    <h2>弥天翼航空联盟</h2>
+    <input id="loginUser" placeholder="账号">
+    <input id="loginPass" type="password" placeholder="密码">
+    <button onclick="login()">登录</button>
+    <button onclick="show('registerPage')" style="margin-top:10px;background:#666">注册</button>
+  </div>
+</div>
+
+<div class="container hidden" id="registerPage">
+  <div class="box">
+    <h2>注册</h2>
+    <input id="regUser" placeholder="账号">
+    <input id="regPass" type="password" placeholder="密码">
+    <input id="regEmail" placeholder="邮箱">
+    <button onclick="register()">提交</button>
+    <button onclick="show('loginPage')" style="margin-top:10px;background:#666">返回</button>
+  </div>
+</div>
+
+<div class="container hidden" id="mainPage">
+  <div class="box">
+    <h2 id="welcome"></h2>
+    <p>积分: <span id="points"></span></p>
+    <button onclick="checkin()">每日签到</button>
+    <button onclick="loadRank()">排行榜</button>
+    <button onclick="loadChat();show('chatPage')">聊天室</button>
+    <div id="rankList" style="margin-top:15px"></div>
+  </div>
+</div>
+
+<div class="container hidden" id="chatPage">
+  <div class="box" style="height:90vh;display:flex;flex-direction:column">
+    <div id="chatBox" style="flex:1;overflow:auto"></div>
+    <div style="display:flex;gap:8px">
+      <input id="chatInput" placeholder="输入消息">
+      <button onclick="sendChat()" style="width:auto;padding:0 16px">发送</button>
+    </div>
+    <button onclick="show('mainPage')" style="margin-top:10px;background:#666">返回</button>
+  </div>
+</div>
+
+<script>
+let user=null;
+const show=id=>document.querySelectorAll('.container').forEach(c=>c.classList.add('hidden'))||document.getElementById(id).classList.remove('hidden');
+
+const register=()=>fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:regUser.value,password:regPass.value,email:regEmail.value})}).then(r=>r.json()).then(d=>{alert(d.msg||'注册成功');show('loginPage');});
+
+const login=()=>fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:loginUser.value,password:loginPass.value})}).then(r=>r.json()).then(d=>{
+  if(!d.ok)return alert(d.msg);
+  user=d.user;
+  welcome.innerText='欢迎, '+user.nickname;
+  points.innerText=user.points;
+  show('mainPage');
+});
+
+const checkin=()=>fetch('/api/checkin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user.id})}).then(r=>r.json()).then(d=>alert(d.ok?'签到成功+10积分':d.msg));
+
+const loadRank=()=>fetch('/api/rank').then(r=>r.json()).then(data=>rankList.innerHTML=data.map((u,i)=>`<div class="rank-item"><span>${i+1}. ${u.nickname}</span><span>${u.points}</span></div>`).join(''));
+
+const loadChat=()=>fetch('/api/chat').then(r=>r.json()).then(data=>chatBox.innerHTML=data.map(d=>`<div class="chat-bubble ${d.nickname===user.nickname?'self':'other'}">${d.nickname}: ${d.message}</div>`).join(''));
+
+const sendChat=()=>{
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user.id,username:user.username,nickname:user.nickname,message:chatInput.value})})
+  .then(()=>{chatInput.value='';loadChat();});
+};
+</script>
+</body>
+</html>
