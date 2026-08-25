@@ -49,6 +49,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </div>
 </div>
 </div>
+
 <div id="mainApp" class="hidden">
 <div class="nav">
 <button class="nav-btn active" onclick="showPage('home')">首页</button>
@@ -58,12 +59,14 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <button class="nav-btn" onclick="showPage('admin')" id="adminBtn" style="display:none">管理</button>
 <button class="nav-btn btn-danger" onclick="logout()" id="logoutBtn" style="display:none">退出</button>
 </div>
+
 <div id="home" class="page">
 <div class="card">
 <h3>欢迎，<span id="nickname">-</span></h3>
 <p>积分：<span id="points">0</span></p>
 </div>
 </div>
+
 <div id="weather" class="page hidden">
 <div class="card">
 <h3>气象情报</h3>
@@ -74,6 +77,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <pre id="weatherResult" style="margin-top:10px"></pre>
 </div>
 </div>
+
 <div id="chat" class="page hidden">
 <div class="card">
 <h3>塔台通讯</h3>
@@ -84,12 +88,14 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </div>
 </div>
 </div>
+
 <div id="events" class="page hidden">
 <div class="card">
 <h3>连飞活动</h3>
 <div id="eventList">加载中...</div>
 </div>
 </div>
+
 <div id="admin" class="page hidden">
 <div class="card">
 <h3>发布活动</h3>
@@ -104,8 +110,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </div>
 </div>
 </div>
+
 <script>
-let user=null;
+let user=null,currentEventId=null;
+
 const login=async()=>{
 const username=document.getElementById("loginUser").value.trim();
 const password=document.getElementById("loginPass").value;
@@ -121,6 +129,7 @@ if(remember){localStorage.setItem("mt_user",JSON.stringify(user))}else{sessionSt
 location.reload();
 }catch{alert("登录请求失败")}
 };
+
 const register=async()=>{
 const username=document.getElementById("regUser").value.trim();
 const nickname=document.getElementById("regNick").value.trim();
@@ -132,6 +141,7 @@ const d=await res.json();
 alert(d.msg);
 if(d.ok)showLogin();
 };
+
 const doLogin=()=>{
 document.getElementById("authOverlay").classList.add("hidden");
 document.getElementById("mainApp").classList.remove("hidden");
@@ -143,36 +153,45 @@ document.getElementById("logoutBtn").style.display="inline-block";
 }
 loadEvents();
 };
+
 window.onload=()=>{
 const u=localStorage.getItem("mt_user")||sessionStorage.getItem("mt_user");
 if(u){user=JSON.parse(u);doLogin();}
 };
+
 const showRegister=()=>{document.getElementById("loginBox").classList.add("hidden");document.getElementById("registerBox").classList.remove("hidden")};
 const showLogin=()=>{document.getElementById("registerBox").classList.add("hidden");document.getElementById("loginBox").classList.remove("hidden")};
 const logout=()=>{localStorage.clear();sessionStorage.clear();location.reload()};
 const showPage=id=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));document.querySelector(`.nav-btn[onclick="showPage('${id}')"]`)?.classList.add("active")};
+
 const loadEvents=async()=>{
 const list=await(await fetch("/api/events/list")).json();
 document.getElementById("eventList").innerHTML=list.length?list.map(e=>`<div style="margin-bottom:12px"><b>${e.title}</b><p style="color:var(--muted);font-size:13px">${e.description}</p><button class="btn" onclick="openSignup(${e.id})">报名</button></div>`).join(""):"暂无活动";
 };
+
 const openSignup=id=>{currentEventId=id;document.getElementById("signupModal").classList.remove("hidden")};
 const closeSignup=()=>document.getElementById("signupModal").classList.add("hidden");
+
 const submitSignup=async()=>{
 await fetch("/api/event-signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({eventId:currentEventId,userId:user.id,callsign:callsign.value,aircraft:aircraft.value,parking:parking.value})});
 alert("报名成功");closeSignup();
 };
+
 const queryWeather=async()=>{
 const d=await(await fetch("/api/weather?icao="+icao.value)).json();
 document.getElementById("weatherResult").innerText=d.metar+"\n"+d.taf;
 };
+
 const sendChat=async()=>{
 await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname:user.nickname,message:chatInput.value})});
 chatInput.value="";
 };
+
 const banUser=async()=>{
 const d=await(await fetch("/api/admin/ban",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targetUserId:banId.value,adminId:user.id})})).json();
 alert(d.msg);
 };
+
 const createEvent=async()=>{
 await fetch("/api/events",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:evTitle.value,description:evDesc.value,userId:user.id})});
 alert("活动已发布");
