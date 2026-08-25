@@ -1,14 +1,24 @@
-export async function onRequest(context) {
-  const { request, env } = context;
-  const { DB } = env;
-  if (request.method !== 'POST') return Response.json({ ok: false, msg: 'Method not allowed' });
-  const { username, password } = await request.json();
-  const user = await DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(username).first();
-  if (!user) return Response.json({ ok: false, msg: '账号或密码错误' });
-  if (user.banned === 1) return Response.json({ ok: false, msg: '账号已被封禁' });
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(password));
-  const hashedInput = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-  if (hashedInput !== user.password_hash) return Response.json({ ok: false, msg: '账号或密码错误' });
-  return Response.json({ ok: true, user: { id: user.id, username: user.username, nickname: user.nickname, points: user.points, is_admin: user.is_admin } });
+export async function onRequestPost(context) {
+  const { request } = context;
+  const body = await request.json();
+
+  // 示例：仅做格式校验，不查数据库
+  if (!body.username || !body.password) {
+    return Response.json(
+      { ok: false, msg: "参数错误" },
+      { status: 400 }
+    );
+  }
+
+  return Response.json({
+    ok: true,
+    msg: "登录成功（示例）",
+    user: {
+      id: 1,
+      username: body.username,
+      nickname: "测试用户",
+      points: 100,
+      is_admin: false
+    }
+  });
 }
