@@ -1,8 +1,18 @@
 export async function onRequestPost({ request, env }) {
   const { eventId, userId, callsign, aircraft, parking } = await request.json();
+
+  const event = await env.DB.prepare(
+    `SELECT id FROM events WHERE id = ? AND status = 1`
+  ).bind(eventId).first();
+
+  if (!event) {
+    return Response.json({ ok: false, msg: "当前没有可报名的活动" });
+  }
+
   await env.DB.prepare(
     `INSERT INTO event_signups (event_id, user_id, callsign, aircraft, parking)
      VALUES (?, ?, ?, ?, ?)`
   ).bind(eventId, userId, callsign, aircraft, parking).run();
+
   return Response.json({ ok: true, msg: "报名成功" });
 }
