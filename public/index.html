@@ -5,272 +5,124 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>弥天翼航空联盟</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
-}
-.container{
-  width:100%;
-  max-width:420px;
-}
-.box{
-  background:rgba(255,255,255,0.15);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border-radius:20px;
-  padding:28px 24px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.25);
-  color:#fff;
-  animation:fadeIn .6s ease;
-}
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(20px)}
-  to{opacity:1;transform:translateY(0)}
-}
-h2{text-align:center;font-weight:600;margin-bottom:24px;letter-spacing:1px}
-input{
-  width:100%;
-  padding:14px 16px;
-  margin:12px 0;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-  background:rgba(255,255,255,0.9);
-  color:#333;
-  outline:none;
-}
-input:focus{box-shadow:0 0 0 3px rgba(30,144,255,.5)}
-button{
-  width:100%;
-  padding:14px;
-  margin-top:14px;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-  font-weight:600;
-  cursor:pointer;
-  background:linear-gradient(135deg,#1e90ff,#00bfff);
-  color:#fff;
-  transition:all .2s ease;
-  box-shadow:0 6px 20px rgba(30,144,255,.35);
-}
-button:active{transform:scale(0.97)}
-button.secondary{
-  background:rgba(255,255,255,0.25);
-  box-shadow:none;
-}
-button.secondary:active{background:rgba(255,255,255,0.35)}
-.hidden{display:none}
-
-.rank-item{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 0;
-  border-bottom:1px solid rgba(255,255,255,0.15);
-  font-size:15px;
-}
-
-.chat-bubble{
-  margin:8px 0;
-  padding:10px 14px;
-  border-radius:16px;
-  max-width:80%;
-  word-break:break-word;
-  font-size:14px;
-}
-.self{
-  background:linear-gradient(135deg,#1e90ff,#00bfff);
-  color:#fff;
-  margin-left:auto;
-}
-.other{
-  background:rgba(255,255,255,0.25);
-  color:#fff;
-}
-#chatBox{flex:1;overflow:auto;padding:10px 0}
-
-code{background:rgba(0,0,0,0.25);padding:6px 8px;border-radius:8px;display:block;margin-top:6px}
+:root{--bg:#ffffff;--primary:#1e90ff;--green:#2ecc71}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:#333;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+input{padding:12px;margin:10px 0;width:100%;border:1px solid #ddd;border-radius:10px;font-size:16px}
+button{padding:12px;width:100%;border:none;border-radius:10px;font-size:15px;font-weight:600;background:var(--primary);color:#fff;cursor:pointer}
+button.secondary{background:#888}
+.container{display:none;padding:70px 16px 60px}
+.container.active{display:block}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:#f8f9fa;display:flex;align-items:center;padding:0 16px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:100}
+.topbar button{width:auto;background:none;color:#333;font-size:22px}
+.menu{position:absolute;top:56px;left:0;background:#fff;padding:12px;display:none;flex-direction:column;gap:8px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+.menu.show{display:flex}
+.userinfo{margin-left:auto;font-size:14px}
+footer{position:fixed;bottom:0;left:0;right:0;text-align:center;padding:12px;background:var(--green);color:#fff;font-weight:600}
+.card{background:#f4f6f8;padding:16px;border-radius:14px;margin:12px 0}
+@media(min-width:768px){.container{max-width:720px;margin:auto}}
 </style>
 </head>
 <body>
 
-<!-- 登录 -->
-<div class="container" id="loginPage">
-  <div class="box">
-    <h2>弥天翼航空联盟</h2>
-    <input id="loginUser" placeholder="账号">
-    <input id="loginPass" type="password" placeholder="密码">
-    <button onclick="login()">登录</button>
-    <button class="secondary" onclick="show('registerPage')">注册账号</button>
+<!-- 顶部 -->
+<div class="topbar">
+  <button onclick="menu.classList.toggle('show')">☰</button>
+  <div class="menu" id="menu">
+    <button onclick="nav('main')">主界面</button>
+    <button onclick="nav('event')">连飞活动</button>
+    <button onclick="nav('honor')">荣誉墙</button>
+    <button onclick="nav('chat')">聊天室</button>
+    <button onclick="logout()">退出</button>
   </div>
+  <div class="userinfo" id="userinfo"></div>
+</div>
+
+<!-- 登录 -->
+<div class="container active" id="loginPage">
+  <h2>弥天翼航空联盟</h2>
+  <input id="loginUser" placeholder="4位数字ID">
+  <input id="loginPass" type="password" placeholder="密码">
+  <label><input type="checkbox" id="remember"> 记住我</label>
+  <button onclick="login()">登录</button>
+  <button class="secondary" onclick="nav('register')">注册</button>
 </div>
 
 <!-- 注册 -->
-<div class="container hidden" id="registerPage">
-  <div class="box">
-    <h2>注册</h2>
-    <input id="regUser" placeholder="账号">
-    <input id="regPass" type="password" placeholder="密码">
-    <input id="regEmail" placeholder="邮箱">
-    <button onclick="register()">提交注册</button>
-    <button class="secondary" onclick="show('loginPage')">返回登录</button>
+<div class="container" id="registerPage">
+  <h2>注册</h2>
+  <input id="regUser" placeholder="4位数字ID">
+  <input id="regPass" type="password" placeholder="密码">
+  <input id="regEmail" placeholder="邮箱">
+  <button onclick="register()">提交</button>
+  <button class="secondary" onclick="nav('login')">返回</button>
+</div>
+
+<!-- 主界面 -->
+<div class="container" id="mainPage">
+  <div class="card">
+    <h3>连飞活动</h3>
+    <button onclick="nav('event')">查看活动</button>
+  </div>
+  <div class="card">
+    <h3>荣誉墙</h3>
+    <button onclick="nav('honor')">查看荣誉</button>
   </div>
 </div>
 
-<!-- 主面板 -->
-<div class="container hidden" id="mainPage">
-  <div class="box">
-    <h2 id="welcome"></h2>
-    <p>积分：<span id="points"></span></p>
-    <button onclick="checkin()">每日签到</button>
-    <button onclick="loadRank()">排行榜</button>
-    <button onclick="loadChat();show('chatPage')">聊天室</button>
-    <button onclick="show('weatherPage')">🌍 全球机场天气</button>
-    <div id="rankList" style="margin-top:15px"></div>
-  </div>
+<!-- 连飞活动 -->
+<div class="container" id="eventPage">
+  <h2>连飞活动</h2>
+  <div id="eventList"></div>
 </div>
 
-<!-- 聊天室 -->
-<div class="container hidden" id="chatPage">
-  <div class="box" style="height:90vh;display:flex;flex-direction:column">
-    <div id="chatBox"></div>
-    <div style="display:flex;gap:8px">
-      <input id="chatInput" placeholder="输入消息">
-      <button onclick="sendChat()" style="width:auto;padding:0 16px">发送</button>
-    </div>
-    <button class="secondary" onclick="show('mainPage')">返回</button>
-  </div>
+<!-- 荣誉墙 -->
+<div class="container" id="honorPage">
+  <h2>荣誉墙</h2>
+  <div id="honorList"></div>
 </div>
 
-<!-- 全球机场天气 -->
-<div class="container hidden" id="weatherPage">
-  <div class="box">
-    <h2>全球机场天气</h2>
-    <input id="icaoInput" placeholder="输入ICAO代码，如 ZGGG / RJTT / KJFK">
-    <button onclick="queryWeather()">查询 METAR / TAF</button>
-    <button class="secondary" onclick="show('mainPage')">返回</button>
-    <div id="weatherResult" style="margin-top:15px;font-size:14px;line-height:1.6"></div>
-  </div>
-</div>
+<footer>弥天翼航空联盟</footer>
 
 <script>
-let user = null;
+let user=null;
 
-const show = id =>
-  document.querySelectorAll('.container').forEach(c => c.classList.add('hidden')) ||
-  document.getElementById(id).classList.remove('hidden');
+const nav=id=>{
+  document.querySelectorAll('.container').forEach(c=>c.classList.remove('active'));
+  document.getElementById(id+'Page').classList.add('active');
+};
 
-/* 注册 */
-const register = () =>
-  fetch('/api/register', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      username:regUser.value,
-      password:regPass.value,
-      email:regEmail.value
-    })
-  })
-  .then(r => r.json())
-  .then(d => {
-    alert(d.msg || '注册成功');
-    if(d.ok) show('loginPage');
-  })
-  .catch(() => alert('注册失败'));
-
-/* 登录 */
-const login = () =>
-  fetch('/api/login', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      username:loginUser.value,
-      password:loginPass.value
-    })
-  })
-  .then(r => r.json())
-  .then(d => {
+const login=()=>{
+  if(!/^\d{4}$/.test(loginUser.value)) return alert('账号必须为4位数字ID');
+  fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:loginUser.value,password:loginPass.value})})
+  .then(r=>r.json()).then(d=>{
     if(!d.ok) return alert(d.msg);
-    user = d.user;
-    welcome.innerText = '欢迎, ' + user.nickname;
-    points.innerText = user.points;
-    show('mainPage');
-  })
-  .catch(() => alert('登录失败'));
-
-/* 签到 */
-const checkin = () =>
-  fetch('/api/checkin', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({userId:user.id})
-  })
-  .then(r => r.json())
-  .then(d => alert(d.ok ? '签到成功 +10 积分' : d.msg))
-  .catch(() => alert('签到失败'));
-
-/* 排行榜 */
-const loadRank = () =>
-  fetch('/api/rank')
-    .then(r => r.json())
-    .then(data =>
-      rankList.innerHTML = data.map((u,i) =>
-        `<div class="rank-item"><span>${i+1}. ${u.nickname}</span><span>${u.points}</span></div>`
-      ).join('')
-    )
-    .catch(() => rankList.innerHTML = '加载失败');
-
-/* 聊天室 */
-const loadChat = () =>
-  fetch('/api/chat')
-    .then(r => r.json())
-    .then(data =>
-      chatBox.innerHTML = data.map(d =>
-        `<div class="chat-bubble ${d.nickname===user.nickname?'self':'other'}">
-          <b>${d.nickname}</b><br>${d.message}
-        </div>`
-      ).join('')
-    );
-
-const sendChat = () => {
-  fetch('/api/chat', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      userId:user.id,
-      username:user.username,
-      nickname:user.nickname,
-      message:chatInput.value
-    })
-  })
-  .then(() => { chatInput.value=''; loadChat(); })
-  .catch(() => alert('发送失败'));
+    user=d.user;
+    if(remember.checked) localStorage.setItem('mt_user',JSON.stringify(user));
+    initUser();
+    nav('main');
+  });
 };
 
-/* 全球机场天气 */
-const queryWeather = () => {
-  const icao = icaoInput.value.trim().toUpperCase();
-  if(!icao) return alert('请输入ICAO代码');
-  weatherResult.innerHTML = '查询中...';
-  fetch('/api/weather?icao=' + icao)
-    .then(r => r.json())
-    .then(d => {
-      if(!d.ok) return weatherResult.innerHTML = '❌ ' + d.msg;
-      weatherResult.innerHTML = `
-        <p><b>机场：</b>${d.icao}</p>
-        <p><b>飞行类别：</b>${d.flightCat || '未知'}</p>
-        <p><b>METAR：</b><code>${d.metar || '无数据'}</code></p>
-        <p><b>TAF：</b><code>${d.taf || '无数据'}</code></p>
-      `;
-    })
-    .catch(() => weatherResult.innerHTML = '查询失败');
+const register=()=>{
+  if(!/^\d{4}$/.test(regUser.value)) return alert('账号必须为4位数字ID');
+  fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:regUser.value,password:regPass.value,email:regEmail.value})})
+  .then(r=>r.json()).then(d=>{alert(d.msg);if(d.ok)nav('login')});
 };
+
+const logout=()=>{localStorage.clear();location.reload();};
+
+const initUser=()=>{
+  userinfo.innerText=`欢迎, ${user.nickname}`;
+  fetch('https://ipapi.co/json').then(r=>r.json()).then(d=>{
+    userinfo.innerText+=` 🌤 ${d.city}`;
+  });
+};
+
+if(localStorage.getItem('mt_user')){
+  user=JSON.parse(localStorage.getItem('mt_user'));
+  initUser();nav('main');
+}
 </script>
 </body>
 </html>
