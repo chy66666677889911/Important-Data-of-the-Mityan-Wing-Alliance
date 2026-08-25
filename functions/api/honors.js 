@@ -1,22 +1,25 @@
 export async function onRequestGet({ env }) {
-  const { results } = await env.DB.prepare(
-    "SELECT * FROM honors ORDER BY id DESC"
+  const list = await env.DB.prepare(
+    `SELECT title, description FROM honors ORDER BY created_at DESC`
   ).all();
-  return Response.json(results);
+  return Response.json(list.results);
 }
 
 export async function onRequestPost({ request, env }) {
-  const { title, description, image_url, userId } = await request.json();
+  const { title, description, userId } = await request.json();
 
-  const user = await env.DB.prepare(
-    "SELECT is_admin FROM users WHERE id = ?"
+  const admin = await env.DB.prepare(
+    `SELECT is_admin FROM users WHERE id = ?`
   ).bind(userId).first();
 
-  if (!user?.is_admin) return Response.json({ ok: false, msg: "无权限" });
+  if (!admin || admin.is_admin !== 1) {
+    return Response.json({ ok: false, msg: "仅管理员可发布荣誉" });
+  }
 
   await env.DB.prepare(
-    "INSERT INTO honors (title, description, image_url) VALUES (?, ?, ?)"
-  ).bind(title, description, image_url).run();
+    `INSERT INTO honors (title, description)
+     VALUES (?, ?)`
+  ).bind(title, description).run();
 
-  return Response.json({ ok: true, msg: "荣誉已添加" });
+  return Response.json({ ok: true });
 }
