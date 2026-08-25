@@ -1,30 +1,16 @@
-export async function onRequestGet({ request, env }) {
-  const icao = new URL(request.url).searchParams.get("icao")?.toUpperCase().trim();
-
-  if (!/^[A-Z]{4}$/.test(icao)) {
-    return Response.json({ ok: false, msg: "ICAO 格式错误" });
-  }
-
-  const headers = {
-    Authorization: `BEARER ${env.AVWX_TOKEN}`,
-    "Content-Type": "application/json"
-  };
-
+export async function onRequest(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  const icao = url.searchParams.get('icao')?.toUpperCase();
+  if (!icao) return Response.json({ ok: false, msg: '缺少ICAO参数' });
   try {
-    const [m, t] = await Promise.all([
-      fetch(`https://avwx.rest/api/metar/${icao}`, { headers }),
-      fetch(`https://avwx.rest/api/taf/${icao}`, { headers })
-    ]);
-
-    const metar = await m.json();
-    const taf = await t.json();
-
-    return Response.json({
-      ok: true,
-      metar: metar.raw || "无 METAR",
-      taf: taf.raw || "无 TAF"
-    });
+    const avwxToken = env.AVWX_TOKEN;
+    const metarRes = await fetch(`https://avwx.rest/api/metar/${icao}`, { headers: { Authorization: avwxToken } });
+    const tafRes = await fetch(`https://avwx.rest/api/taf/${icao}`, { headers: { Authorization: avwxToken } });
+    const metar = await metarRes.json();
+    const taf = await tafRes.json();
+    return Response.json({ metar: metar.raw || '无METAR数据', taf: taf.raw || '无TAF数据' });
   } catch {
-    return Response.json({ ok: false, msg: "气象服务不可用" });
+    return Response.json({ metar: '气象获取失败', taf: '气象获取失败' });
   }
 }
