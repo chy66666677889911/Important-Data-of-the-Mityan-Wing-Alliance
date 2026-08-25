@@ -6,94 +6,47 @@
 <title>弥天翼航空联盟</title>
 <style>
 :root{
-  --bg:#f4f6f9;
-  --white:#ffffff;
-  --primary:#007bff;
-  --green:#28a745;
-  --text:#333;
-  --muted:#888;
+  --bg:#f4f6f9;--white:#ffffff;--primary:#007bff;
+  --green:#28a745;--text:#333;--muted:#888;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
 body{background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
-
-/* 侧边栏 */
-.sidebar{
-  width:220px;background:var(--white);box-shadow:2px 0 10px rgba(0,0,0,.05);
-  display:flex;flex-direction:column;transition:transform .3s ease;z-index:100
-}
+.sidebar{width:220px;background:var(--white);box-shadow:2px 0 10px rgba(0,0,0,.05);display:flex;flex-direction:column;transition:transform .3s ease;z-index:100}
 .sidebar-header{padding:20px;border-bottom:1px solid #eee;font-weight:600;text-align:center}
 .sidebar-menu{flex:1;padding:20px 0;overflow-y:auto}
-.sidebar-menu button{
-  display:block;width:100%;padding:12px 20px;border:none;background:transparent;
-  text-align:left;font-size:14px;color:var(--text);cursor:pointer
-}
+.sidebar-menu button{display:block;width:100%;padding:12px 20px;border:none;background:transparent;text-align:left;font-size:14px;color:var(--text);cursor:pointer}
 .sidebar-menu button:hover,.sidebar-menu button.active{background:#eef5ff;color:var(--primary)}
 .admin-only{color:#dc3545 !important;display:none}
-
-/* 主内容 */
 .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
-.topbar{
-  background:var(--white);padding:15px 30px;display:flex;justify-content:space-between;align-items:center;
-  box-shadow:0 2px 10px rgba(0,0,0,.05);z-index:10
-}
-.welcome-text{font-size:16px}
-.welcome-text span{font-weight:600;color:var(--primary)}
+.topbar{background:var(--white);padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.05);z-index:10}
+.welcome-text{font-size:16px}.welcome-text span{font-weight:600;color:var(--primary)}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .local-weather{font-size:13px;color:var(--muted)}
 .btn{padding:6px 12px;border-radius:4px;border:none;cursor:pointer;font-size:13px}
 .btn-primary{background:var(--primary);color:#fff}
 .btn-success{background:var(--green);color:#fff}
-
 .page-container{flex:1;overflow-y:auto;padding:30px;background:linear-gradient(to bottom,#e3f2fd 0%,var(--bg) 300px)}
 .page{display:none}.page.active{display:block}
-
-/* 卡片 */
 .card{background:var(--white);padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:20px}
 input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:4px;font-size:14px}
-
-/* 统计 */
 .stats-row{display:flex;gap:20px;margin-bottom:20px}
 .stat-card{flex:1;background:var(--white);padding:20px;border-radius:8px;text-align:center}
 .stat-card .num{font-size:32px;font-weight:bold}
 .stat-card .label{font-size:13px;color:var(--muted);margin-top:5px}
-
-/* 公告 */
 .info-row{display:flex;gap:20px}
 .info-box{flex:1;background:var(--white);padding:20px;border-radius:8px;min-height:200px}
 .info-box h3{border-left:4px solid var(--primary);padding-left:10px;margin-bottom:15px}
-
-/* 登录遮罩 */
-.auth-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center;z-index:1000
-}
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center;z-index:1000}
 .auth-box{background:var(--white);padding:40px;border-radius:10px;width:320px;text-align:center}
-
-/* 底部 */
-.footer{
-  position:fixed;bottom:0;left:0;width:100%;text-align:center;padding:12px;
-  background:var(--green);color:#fff;font-size:14px;z-index:99
-}
-
-/* 移动端 */
-.menu-toggle{
-  display:none;position:fixed;top:15px;left:15px;z-index:101;
-  width:40px;height:40px;border-radius:50%;border:none;background:var(--white);
-  box-shadow:0 2px 5px rgba(0,0,0,.2);font-size:20px;cursor:pointer
-}
-@media(max-width:768px){
-  .menu-toggle{display:block}
-  .sidebar{position:fixed;top:0;left:0;height:100%;transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .stats-row,.info-row{flex-direction:column}
-  .topbar{padding-left:60px}
-}
+.footer{position:fixed;bottom:0;left:0;width:100%;text-align:center;padding:12px;background:var(--green);color:#fff;font-size:14px;z-index:99}
+.menu-toggle{display:none;position:fixed;top:15px;left:15px;z-index:101;width:40px;height:40px;border-radius:50%;border:none;background:var(--white);box-shadow:0 2px 5px rgba(0,0,0,.2);font-size:20px;cursor:pointer}
+@media(max-width:768px){.menu-toggle{display:block}.sidebar{position:fixed;top:0;left:0;height:100%;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.stats-row,.info-row{flex-direction:column}.topbar{padding-left:60px}}
 </style>
 </head>
 <body>
 
 <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
 
-<!-- 侧边栏 -->
 <aside class="sidebar">
   <div class="sidebar-header">弥天翼航空</div>
   <div class="sidebar-menu">
@@ -110,7 +63,6 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
   <div style="padding:20px"><button class="btn" style="width:100%;background:#f8f9fa" onclick="logout()">🚪 退出</button></div>
 </aside>
 
-<!-- 主内容 -->
 <div class="main-content">
   <div class="topbar">
     <div class="welcome-text" id="welcomeText">欢迎回来，请登录</div>
@@ -123,7 +75,6 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
   </div>
 
   <div class="page-container">
-    <!-- 主控面板 -->
     <div class="page active" id="mainPage">
       <div class="stats-row">
         <div class="stat-card"><div class="num" id="statUsers">0</div><div class="label">注册用户</div></div>
@@ -131,28 +82,13 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
         <div class="stat-card"><div class="num" id="statPoints">0</div><div class="label">我的积分</div></div>
       </div>
       <div class="info-row">
-        <div class="info-box">
-          <h3>📢 系统公告</h3>
-          <p style="font-size:13px">欢迎加入弥天翼航空联盟，祝各位机长飞行愉快！</p>
-        </div>
-        <div class="info-box">
-          <h3>👥 职员公示</h3>
-          <div id="rankList"></div>
-        </div>
+        <div class="info-box"><h3>📢 系统公告</h3><p style="font-size:13px">欢迎加入弥天翼航空联盟，祝各位机长飞行愉快！</p></div>
+        <div class="info-box"><h3>👥 职员公示</h3><div id="rankList"></div></div>
       </div>
     </div>
 
-    <!-- 连飞活动 -->
-    <div class="page" id="eventPage">
-      <div class="card"><h3>连飞活动</h3><div id="eventList"></div></div>
-    </div>
-
-    <!-- 荣誉墙 -->
-    <div class="page" id="honorPage">
-      <div class="card"><h3>荣誉墙</h3><div id="honorList" style="display:flex;flex-wrap:wrap;gap:15px"></div></div>
-    </div>
-
-    <!-- 机场天气 -->
+    <div class="page" id="eventPage"><div class="card"><h3>连飞活动</h3><div id="eventList"></div></div></div>
+    <div class="page" id="honorPage"><div class="card"><h3>荣誉墙</h3><div id="honorList"></div></div></div>
     <div class="page" id="weatherPage">
       <div class="card">
         <h3>全球机场天气</h3>
@@ -161,8 +97,6 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
         <div id="weatherResult" style="margin-top:15px"></div>
       </div>
     </div>
-
-    <!-- 聊天室 -->
     <div class="page" id="chatPage">
       <div class="card">
         <h3>聊天室</h3>
@@ -171,8 +105,6 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
         <button class="btn btn-primary" onclick="sendChat()">发送</button>
       </div>
     </div>
-
-    <!-- 管理员发布活动 -->
     <div class="page" id="adminEventPage">
       <div class="card">
         <h3>发布连飞活动</h3>
@@ -181,8 +113,6 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
         <button class="btn btn-primary" onclick="createEvent()">发布</button>
       </div>
     </div>
-
-    <!-- 管理员编辑荣誉 -->
     <div class="page" id="adminHonorPage">
       <div class="card">
         <h3>添加荣誉</h3>
@@ -195,7 +125,6 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
   </div>
 </div>
 
-<!-- 登录 -->
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-box" id="loginBox">
     <h2>弥天翼航空联盟</h2>
@@ -203,7 +132,7 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
     <input id="loginPass" type="password" placeholder="密码">
     <label style="font-size:13px"><input type="checkbox" id="remember"> 记住我</label>
     <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="login()">登录</button>
-    <p style="margin-top:10px;font-size:13px">没有账号？<a href="#" onclick="toggleAuth()">注册</a></p>
+    <p style="margin-top:10px;font-size:13px">没有账号？<a href="#" onclick="toggleAuth(event)">注册</a></p>
   </div>
   <div class="auth-box" id="registerBox" style="display:none">
     <h2>注册</h2>
@@ -211,38 +140,83 @@ input,textarea,select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd
     <input id="regPass" type="password" placeholder="密码">
     <input id="regNick" placeholder="昵称">
     <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="register()">注册</button>
-    <p style="margin-top:10px;font-size:13px"><a href="#" onclick="toggleAuth()">返回登录</a></p>
+    <p style="margin-top:10px;font-size:13px"><a href="#" onclick="toggleAuth(event)">返回登录</a></p>
   </div>
 </div>
 
 <footer class="footer">弥天翼航空联盟</footer>
 
 <script>
-let user=null;
+let user = null;
 
-const init=()=>{
-  const u=localStorage.getItem('mt_user');
-  if(u){user=JSON.parse(u);doLogin()}
+const init = () => {
+  const u = localStorage.getItem('mt_user');
+  if (u) {
+    user = JSON.parse(u);
+    doLogin();
+  }
 };
-const doLogin=()=>{
-  document.getElementById('authOverlay').style.display='none';
-  welcomeText.innerHTML=`欢迎回来，<span>${user.nickname}</span>`;
-  document.getElementById('statPoints').innerText=user.points;
-  if(user.is_admin) document.querySelectorAll('.admin-only').forEach(e=>e.style.display='block');
-  fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>localWeather.innerText=`🌤 ${d.city}`);
+
+const doLogin = () => {
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('welcomeText').innerHTML = `欢迎回来，<span>${user.nickname}</span>`;
+  document.getElementById('statPoints').innerText = user.points || 0;
+  if (user.is_admin) {
+    document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
+  }
+  fetch('https://ipapi.co/json/')
+    .then(r => r.json())
+    .then(d => document.getElementById('localWeather').innerText = `🌤 ${d.city}`)
+    .catch(() => {});
   loadRank();
 };
-const login=()=>{
-  const u=loginUser.value.trim(),p=loginPass.value;
-  if(!/^\d{4}$/.test(u)) return alert('账号必须为4位数字ID');
-  fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})})
-  .then(r=>r.json()).then(d=>{if(!d.ok)return alert(d.msg);user=d.user;if(remember.checked)localStorage.setItem('mt_user',JSON.stringify(user));doLogin()})
+
+const login = async () => {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const remember = document.getElementById('remember');
+
+  if (!/^\d{4}$/.test(username)) {
+    alert('账号必须为4位数字ID');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const d = await res.json();
+
+    if (!d.ok) {
+      alert(d.msg || '登录失败');
+      return;
+    }
+
+    user = d.user;
+    if (remember?.checked) {
+      localStorage.setItem('mt_user', JSON.stringify(user));
+    }
+    doLogin();
+  } catch (err) {
+    alert('登录请求失败，请检查网络或部署状态');
+    console.error(err);
+  }
 };
-const register=()=>{
-  const u=regUser.value.trim(),p=regPass.value,n=regNick.value;
-  if(!/^\d{4}$/.test(u)) return alert('账号必须为4位数字ID');
-  fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,nickname:n})})
-  .then(r=>r.json()).then(d=>{alert(d.msg);if(d.ok)toggleAuth()})
-};
-const logout=()=>{localStorage.clear();location.reload()};
-const toggleAuth=e=>{e.preventDefault();loginBox.style.display=loginBox.style.
+
+const register = async () => {
+  const username = document.getElementById('regUser').value.trim();
+  const password = document.getElementById('regPass').value;
+  const nickname = document.getElementById('regNick').value;
+
+  if (!/^\d{4}$/.test(username)) {
+    alert('账号必须为4位数字ID');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Conte
