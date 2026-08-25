@@ -12,9 +12,7 @@ export async function onRequestPost({ request, env }) {
     "SELECT is_admin FROM users WHERE id = ?"
   ).bind(userId).first();
 
-  if (!user?.is_admin) {
-    return Response.json({ ok: false, msg: "无权限" });
-  }
+  if (!user?.is_admin) return Response.json({ ok: false, msg: "无权限" });
 
   await env.DB.prepare(
     "INSERT INTO events (title, description, creator_id) VALUES (?, ?, ?)"
@@ -22,4 +20,3 @@ export async function onRequestPost({ request, env }) {
 
   return Response.json({ ok: true, msg: "活动已发布" });
 }
-
