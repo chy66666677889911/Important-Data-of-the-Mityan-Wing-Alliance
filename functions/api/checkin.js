@@ -7,5 +7,5 @@ export async function onRequest(context) {
   const user = await DB.prepare(`SELECT last_checkin FROM users WHERE id = ?`).bind(userId).first();
   if (user.last_checkin === today) return Response.json({ ok: false, msg: '今日已签到' });
   await DB.prepare(`UPDATE users SET points = points + 10, last_checkin = ? WHERE id = ?`).bind(today, userId).run();
-  return Response.json({ ok: true, msg: '签到成功', added: 10 });
+  return Response.json({ ok: true, msg: '签到成功' });
 }
