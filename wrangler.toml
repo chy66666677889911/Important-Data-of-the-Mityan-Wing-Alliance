@@ -1,7 +1,10 @@
-name = "mitianyi"
-compatibility_date = "2024-06-01"
+name = "mtyafa-platform"
+compatibility_date = "2026-08-25"
+compatibility_flags = ["nodejs_compat"]
 
 [[d1_databases]]
 binding = "DB"
-database_name = "mitianyi_db"
+database_name = "mtyafa-db"
 database_id = "1aa57f87-d13c-4a5a-8f90-43141a77722b"
+
+functions_dir = "functions"
