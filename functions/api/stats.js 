@@ -1,8 +1,0 @@
-export async function onRequest(context) {
-  const { env } = context;
-  const { DB } = env;
-  const users = await DB.prepare(`SELECT COUNT(*) as count FROM users`).first();
-  const events = await DB.prepare(`SELECT COUNT(*) as count FROM events`).first();
-  const signups = await DB.prepare(`SELECT COUNT(*) as count FROM signups`).first();
-  return Response.json({ users: users.count, events: events.count, signups: signups.count });
-}

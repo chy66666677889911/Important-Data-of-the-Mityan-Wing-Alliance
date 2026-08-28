@@ -1,9 +1,0 @@
-export async function onRequest(context) {
-  const { request, env } = context;
-  const { DB } = env;
-  if (request.method !== 'POST') return Response.json({ ok: false, msg: 'Method not allowed' });
-  const { eventId, userId, callsign, aircraft, parking } = await request.json();
-  if (await DB.prepare(`SELECT id FROM signups WHERE event_id = ? AND user_id = ?`).bind(eventId, userId).first()) return Response.json({ ok: false, msg: '已报名该活动' });
-  await DB.prepare(`INSERT INTO signups (event_id, user_id, callsign, aircraft, parking) VALUES (?, ?, ?, ?, ?)`).bind(eventId, userId, callsign, aircraft, parking).run();
-  return Response.json({ ok: true, msg: '报名成功' });
-}
