@@ -9,20 +9,18 @@
 <body>
     <div class="container">
         <div class="logo">
-            <!-- 这里放你的绿色logo -->
-            <h1 style="color: #2ecc71;">弥天翼航空联盟</h1>
+            <h1 style="color: #2ecc71;">🟢 弥天翼航空联盟</h1>
         </div>
         <form id="loginForm">
-            <input type="text" id="username" placeholder="四位数字ID" required>
+            <input type="text" id="username" placeholder="四位数字ID（如1001）" maxlength="4" required>
             <input type="password" id="password" placeholder="密码" required>
-            <label>
+            <label class="remember">
                 <input type="checkbox" id="remember"> 记住我
             </label>
             <button type="submit">登录</button>
         </form>
-        <p>没有账号？<a href="register.html">注册</a></p>
+        <p class="switch">没有账号？<a href="register.html">去注册</a></p>
     </div>
     <script src="js/main.js"></script>
 </body>
 </html>
-
