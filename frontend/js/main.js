@@ -1,7 +1,6 @@
 // ========== 全局 ==========
-const API_BASE = 'mitianyi-api.chy66666678.workers.dev';
+const API_BASE = '';
 
-// 页面守卫
 const pilotId = localStorage.getItem('pilotId');
 const currentPage = window.location.pathname;
 
@@ -73,6 +72,7 @@ if (registerForm) {
 // ========== 退出 ==========
 function logout() {
     localStorage.removeItem('pilotId');
+    localStorage.removeItem('isAdmin');
     window.location.href = 'index.html';
 }
 
@@ -80,20 +80,16 @@ function logout() {
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    // 高亮按钮
     document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
-
-    // 切换时加载对应数据
     if (id === 'events') loadEvents();
 }
 
 // ========== 大厅数据 ==========
 if (currentPage.includes('dashboard.html')) {
-    // 显示飞行员ID
     document.getElementById('pilotName').textContent = pilotId || '未知';
 
-    // 天气（用 METAR 接口查最近机场，这里默认 ZGGG，实际可根据 IP 定位）
+    // 天气
     fetch(`${API_BASE}/api/metar?icao=ZGGG`)
         .then(r => r.text())
         .then(text => {
@@ -103,32 +99,50 @@ if (currentPage.includes('dashboard.html')) {
             document.getElementById('weather').textContent = '天气获取失败';
         });
 
-    // 附近机场（模拟，实际可用 IP 定位 + station 接口）
+    // 附近机场
     document.getElementById('nearbyAirports').textContent = 'ZGGG（广州白云）, ZGKL（桂林两江）, ZGNN（南宁吴圩）';
-
-    // 在线人数
     document.getElementById('onlineCount').textContent = Math.floor(Math.random() * 20 + 5);
 
-    // 公告
-    const announcements = JSON.parse(localStorage.getItem('announcements') || '["欢迎加入弥天翼航空联盟！"]');
-    document.getElementById('announcements').innerHTML = announcements.map(a => `<p style="padding:5px 0;border-bottom:1px solid #eee;">📢 ${a}</p>`).join('');
+    // 公告（从 D1 读取）
+    fetch(`${API_BASE}/api/announcements`)
+        .then(r => r.json())
+        .then(list => {
+            if (list.length) {
+                document.getElementById('announcements').innerHTML =
+                    list.map(a => `<p style="padding:5px 0;border-bottom:1px solid #eee;">📢 ${a}</p>`).join('');
+            }
+        })
+        .catch(() => {
+            document.getElementById('announcements').innerHTML = '<p style="color:#999;">公告加载失败</p>';
+        });
 
     // 管理员检查
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (isAdmin) {
-        document.getElementById('adminAnnounce').style.display = 'block';
-    }
+    fetch(`${API_BASE}/api/isAdmin?pilotId=${pilotId}`)
+        .then(r => r.json())
+        .then(d => {
+            if (d.isAdmin) {
+                document.getElementById('adminAnnounce').style.display = 'block';
+                localStorage.setItem('isAdmin', 'true');
+            }
+        });
 }
 
 // ========== 发布公告 ==========
 async function postAnnouncement() {
     const text = document.getElementById('announceText').value.trim();
     if (!text) return;
-    let list = JSON.parse(localStorage.getItem('announcements') || '[]');
-    list.unshift(text);
-    localStorage.setItem('announcements', JSON.stringify(list));
-    alert('公告已发布');
-    location.reload();
+    const res = await fetch(`${API_BASE}/api/announce`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pilotId, text })
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert('公告已发布');
+        location.reload();
+    } else {
+        alert('发布失败：' + (data.message || ''));
+    }
 }
 
 // ========== 连飞活动 ==========
@@ -179,14 +193,14 @@ async function signUp(eventId) {
         if (data.success) {
             alert('✅ 报名成功！');
         } else {
-            alert('报名失败：' + (data.message || ''));
+            alert('报名失败');
         }
     } catch (err) {
         alert('网络错误');
     }
 }
 
-// ========== METAR 查询 ==========
+// ========== METAR ==========
 async function getMetar() {
     const icao = document.getElementById('icaoMetar').value.trim().toUpperCase();
     if (!icao) { alert('请输入 ICAO 代码'); return; }
@@ -201,7 +215,7 @@ async function getMetar() {
     }
 }
 
-// ========== 航路查询 ==========
+// ========== 航路 ==========
 async function getRoute() {
     const dep = document.getElementById('dep').value.trim().toUpperCase();
     const arr = document.getElementById('arr').value.trim().toUpperCase();
@@ -215,9 +229,7 @@ async function getRoute() {
             resultBox.textContent = '查询失败：' + data.error;
         } else {
             resultBox.textContent =
-                `航路：${data.route}\n` +
-                `大圆距离：${data.distance_nm} nm\n` +
-                `备注：${data.note}`;
+                `航路：${data.route}\n大圆距离：${data.distance_nm} nm\n备注：${data.note}`;
         }
     } catch (err) {
         resultBox.textContent = '查询失败，请检查网络';
@@ -247,7 +259,7 @@ if (applyForm) {
                 alert('✅ 申请已提交，请等待管理员审核');
                 applyForm.reset();
             } else {
-                alert('提交失败：' + (data.message || ''));
+                alert('提交失败');
             }
         } catch (err) {
             alert('网络错误');
