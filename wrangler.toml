@@ -1,0 +1,14 @@
+name = "Important-Data-of-the-Mityan-Wing-Alliance"
+main = "backend/worker.py"
+compatibility_date = "2024-01-01"
+
+# D1 数据库
+[[d1_databases]]
+binding = "DB"
+database_name = "mitianyi_db"
+database_id = "1aa57f87-d13c-4a5a-8f90-43141a77722b"
+
+# 静态资源托管
+[site]
+bucket = "./frontend"
+
