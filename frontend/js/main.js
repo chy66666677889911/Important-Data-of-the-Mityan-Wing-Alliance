@@ -1,5 +1,5 @@
 // ========== 全局 ==========
-const API_BASE = '';
+const API_BASE = 'https://api.mtyafa.ccwu.cc';
 
 const pilotId = localStorage.getItem('pilotId');
 const currentPage = window.location.pathname;
