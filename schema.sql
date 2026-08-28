@@ -1,6 +1,5 @@
--- Cloudflare D1 数据库
 CREATE TABLE users (
-    id TEXT PRIMARY KEY,  -- 四位数字
+    id TEXT PRIMARY KEY,
     email TEXT UNIQUE,
     password TEXT,
     is_admin INTEGER DEFAULT 0
@@ -42,4 +41,3 @@ CREATE TABLE applications (
     status TEXT DEFAULT '待审核',
     FOREIGN KEY (pilot_id) REFERENCES users(id)
 );
-
