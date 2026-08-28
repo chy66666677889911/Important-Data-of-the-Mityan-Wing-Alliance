@@ -1,5 +1,5 @@
 // ========== 全局 ==========
-const API_BASE = ''; // 同域，留空即可
+const API_BASE = 'mitianyi-api.chy66666678.workers.dev';
 
 // 页面守卫
 const pilotId = localStorage.getItem('pilotId');
