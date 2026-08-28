@@ -15,7 +15,6 @@ if (loginForm) {
         e.preventDefault();
         const id = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
-        const remember = document.getElementById('remember').checked;
 
         if (!/^\d{4}$/.test(id)) { alert('ID 必须是四位数字'); return; }
 
@@ -23,14 +22,15 @@ if (loginForm) {
             const res = await fetch(`${API_BASE}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, password, remember })
+                body: JSON.stringify({ id, password })
             });
             const data = await res.json();
-            if (data.success) {
+            if (data.ok) {
                 localStorage.setItem('pilotId', id);
+                localStorage.setItem('isAdmin', data.isAdmin ? 'true' : 'false');
                 window.location.href = 'dashboard.html';
             } else {
-                alert(data.message || '登录失败');
+                alert(data.error || '登录失败');
             }
         } catch (err) {
             alert('网络错误，请稍后重试');
@@ -44,6 +44,7 @@ if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('pilotId').value.trim();
+        const username = document.getElementById('username') ? document.getElementById('username').value.trim() : id;
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
 
@@ -54,14 +55,14 @@ if (registerForm) {
             const res = await fetch(`${API_BASE}/api/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, email, password })
+                body: JSON.stringify({ id, username, email, password })
             });
             const data = await res.json();
-            if (data.success) {
+            if (data.ok) {
                 alert('注册成功！请登录');
                 window.location.href = 'index.html';
             } else {
-                alert(data.message || '注册失败');
+                alert(data.error || '注册失败');
             }
         } catch (err) {
             alert('网络错误，请稍后重试');
@@ -89,7 +90,6 @@ function showSection(id) {
 if (currentPage.includes('dashboard.html')) {
     document.getElementById('pilotName').textContent = pilotId || '未知';
 
-    // 天气
     fetch(`${API_BASE}/api/metar?icao=ZGGG`)
         .then(r => r.text())
         .then(text => {
@@ -99,11 +99,9 @@ if (currentPage.includes('dashboard.html')) {
             document.getElementById('weather').textContent = '天气获取失败';
         });
 
-    // 附近机场
     document.getElementById('nearbyAirports').textContent = 'ZGGG（广州白云）, ZGKL（桂林两江）, ZGNN（南宁吴圩）';
     document.getElementById('onlineCount').textContent = Math.floor(Math.random() * 20 + 5);
 
-    // 公告（从 D1 读取）
     fetch(`${API_BASE}/api/announcements`)
         .then(r => r.json())
         .then(list => {
@@ -111,20 +109,12 @@ if (currentPage.includes('dashboard.html')) {
                 document.getElementById('announcements').innerHTML =
                     list.map(a => `<p style="padding:5px 0;border-bottom:1px solid #eee;">📢 ${a}</p>`).join('');
             }
-        })
-        .catch(() => {
-            document.getElementById('announcements').innerHTML = '<p style="color:#999;">公告加载失败</p>';
         });
 
-    // 管理员检查
-    fetch(`${API_BASE}/api/isAdmin?pilotId=${pilotId}`)
-        .then(r => r.json())
-        .then(d => {
-            if (d.isAdmin) {
-                document.getElementById('adminAnnounce').style.display = 'block';
-                localStorage.setItem('isAdmin', 'true');
-            }
-        });
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    if (isAdmin) {
+        document.getElementById('adminAnnounce').style.display = 'block';
+    }
 }
 
 // ========== 发布公告 ==========
@@ -137,11 +127,11 @@ async function postAnnouncement() {
         body: JSON.stringify({ pilotId, text })
     });
     const data = await res.json();
-    if (data.success) {
+    if (data.ok) {
         alert('公告已发布');
         location.reload();
     } else {
-        alert('发布失败：' + (data.message || ''));
+        alert('发布失败：' + (data.error || ''));
     }
 }
 
@@ -152,10 +142,7 @@ async function loadEvents() {
     try {
         const res = await fetch(`${API_BASE}/api/events`);
         const events = await res.json();
-        if (!events.length) {
-            list.innerHTML = '<p style="color:#999;">暂无活动</p>';
-            return;
-        }
+        if (!events.length) { list.innerHTML = '<p style="color:#999;">暂无活动</p>'; return; }
         list.innerHTML = '';
         events.forEach(ev => {
             const div = document.createElement('div');
@@ -182,22 +169,14 @@ async function signUp(eventId) {
     if (!callsign) return;
     const aircraft = prompt('请输入所使用机型（如 B738）：');
     if (!aircraft) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/signup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ eventId, pilotId, stand, callsign, aircraft })
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert('✅ 报名成功！');
-        } else {
-            alert('报名失败');
-        }
-    } catch (err) {
-        alert('网络错误');
-    }
+    const res = await fetch(`${API_BASE}/api/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, pilotId, stand, callsign, aircraft })
+    });
+    const data = await res.json();
+    if (data.ok) alert('✅ 报名成功！');
+    else alert('报名失败');
 }
 
 // ========== METAR ==========
@@ -225,12 +204,8 @@ async function getRoute() {
     try {
         const res = await fetch(`${API_BASE}/api/route?dep=${dep}&arr=${arr}`);
         const data = await res.json();
-        if (data.error) {
-            resultBox.textContent = '查询失败：' + data.error;
-        } else {
-            resultBox.textContent =
-                `航路：${data.route}\n大圆距离：${data.distance_nm} nm\n备注：${data.note}`;
-        }
+        if (data.error) resultBox.textContent = '查询失败：' + data.error;
+        else resultBox.textContent = `航路：${data.route}\n大圆距离：${data.distance_nm} nm\n备注：${data.note}`;
     } catch (err) {
         resultBox.textContent = '查询失败，请检查网络';
     }
@@ -244,25 +219,19 @@ if (applyForm) {
         const position = document.getElementById('position').value;
         const reason = document.getElementById('reason').value.trim();
         const loyalty = document.getElementById('loyalty').checked;
-
         if (!loyalty) { alert('必须勾选效忠联盟'); return; }
         if (reason.length < 10) { alert('申请理由至少10个字'); return; }
-
-        try {
-            const res = await fetch(`${API_BASE}/api/apply`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pilotId, position, reason, loyalty })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert('✅ 申请已提交，请等待管理员审核');
-                applyForm.reset();
-            } else {
-                alert('提交失败');
-            }
-        } catch (err) {
-            alert('网络错误');
+        const res = await fetch(`${API_BASE}/api/apply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pilotId, position, reason, loyalty })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            alert('✅ 申请已提交，请等待管理员审核');
+            applyForm.reset();
+        } else {
+            alert('提交失败：' + (data.error || ''));
         }
     });
 }
