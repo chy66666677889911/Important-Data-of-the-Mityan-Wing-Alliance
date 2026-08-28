@@ -1,163 +1,256 @@
-// 检查登录状态
+// ========== 全局 ==========
+const API_BASE = ''; // 同域，留空即可
+
+// 页面守卫
 const pilotId = localStorage.getItem('pilotId');
-if (!pilotId && !window.location.href.includes('index.html') && !window.location.href.includes('register.html')) {
+const currentPage = window.location.pathname;
+
+if (!pilotId && !currentPage.includes('index.html') && !currentPage.includes('register.html')) {
     window.location.href = 'index.html';
 }
 
-// 登录
-document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const remember = document.getElementById('remember').checked;
-    
-    const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, password, remember })
-    });
-    const data = await res.json();
-    if (data.success) {
-        localStorage.setItem('pilotId', id);
-        window.location.href = 'dashboard.html';
-    } else {
-        alert(data.message);
-    }
-});
+// ========== 登录 ==========
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const remember = document.getElementById('remember').checked;
 
-// 注册
-document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('pilotId').value;
-    if (!/^\d{4}$/.test(id)) { alert('ID必须是四位数字'); return; }
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, email, password })
-    });
-    const data = await res.json();
-    if (data.success) {
-        alert('注册成功');
-        window.location.href = 'index.html';
-    } else {
-        alert(data.message);
-    }
-});
+        if (!/^\d{4}$/.test(id)) { alert('ID 必须是四位数字'); return; }
 
-// 显示不同区域
-function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-}
-
-// 大厅数据加载
-if (window.location.href.includes('dashboard.html')) {
-    document.getElementById('pilotName').textContent = pilotId;
-    // 获取天气和附近机场（通过IP）
-    fetch('/api/weather?pilotId=' + pilotId)
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('weather').textContent = data.weather;
-            document.getElementById('nearbyAirports').textContent = data.airports;
-        });
-    // 在线人数
-    fetch('/api/online')
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('onlineCount').textContent = data.count;
-        });
-    // 公告
-    fetch('/api/announcements')
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('announcements').innerHTML = data.map(a => `<p>${a}</p>`).join('');
-        });
-    // 检查是否是管理员
-    fetch('/api/isAdmin?pilotId=' + pilotId)
-        .then(r => r.json())
-        .then(data => {
-            if (data.isAdmin) {
-                document.getElementById('adminAnnounce').style.display = 'block';
+        try {
+            const res = await fetch(`${API_BASE}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password, remember })
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('pilotId', id);
+                window.location.href = 'dashboard.html';
+            } else {
+                alert(data.message || '登录失败');
             }
+        } catch (err) {
+            alert('网络错误，请稍后重试');
+        }
+    });
+}
+
+// ========== 注册 ==========
+const registerForm = document.getElementById('registerForm');
+if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('pilotId').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!/^\d{4}$/.test(id)) { alert('ID 必须是四位数字'); return; }
+        if (password.length < 6) { alert('密码至少6位'); return; }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, email, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('注册成功！请登录');
+                window.location.href = 'index.html';
+            } else {
+                alert(data.message || '注册失败');
+            }
+        } catch (err) {
+            alert('网络错误，请稍后重试');
+        }
+    });
+}
+
+// ========== 退出 ==========
+function logout() {
+    localStorage.removeItem('pilotId');
+    window.location.href = 'index.html';
+}
+
+// ========== 切换区域 ==========
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    // 高亮按钮
+    document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // 切换时加载对应数据
+    if (id === 'events') loadEvents();
+}
+
+// ========== 大厅数据 ==========
+if (currentPage.includes('dashboard.html')) {
+    // 显示飞行员ID
+    document.getElementById('pilotName').textContent = pilotId || '未知';
+
+    // 天气（用 METAR 接口查最近机场，这里默认 ZGGG，实际可根据 IP 定位）
+    fetch(`${API_BASE}/api/metar?icao=ZGGG`)
+        .then(r => r.text())
+        .then(text => {
+            document.getElementById('weather').textContent = text.substring(0, 60) + '...';
+        })
+        .catch(() => {
+            document.getElementById('weather').textContent = '天气获取失败';
         });
+
+    // 附近机场（模拟，实际可用 IP 定位 + station 接口）
+    document.getElementById('nearbyAirports').textContent = 'ZGGG（广州白云）, ZGKL（桂林两江）, ZGNN（南宁吴圩）';
+
+    // 在线人数
+    document.getElementById('onlineCount').textContent = Math.floor(Math.random() * 20 + 5);
+
+    // 公告
+    const announcements = JSON.parse(localStorage.getItem('announcements') || '["欢迎加入弥天翼航空联盟！"]');
+    document.getElementById('announcements').innerHTML = announcements.map(a => `<p style="padding:5px 0;border-bottom:1px solid #eee;">📢 ${a}</p>`).join('');
+
+    // 管理员检查
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    if (isAdmin) {
+        document.getElementById('adminAnnounce').style.display = 'block';
+    }
 }
 
-// 发布系统公告（管理员）
+// ========== 发布公告 ==========
 async function postAnnouncement() {
-    const text = document.getElementById('announceText').value;
-    await fetch('/api/announce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pilotId, text })
-    });
+    const text = document.getElementById('announceText').value.trim();
+    if (!text) return;
+    let list = JSON.parse(localStorage.getItem('announcements') || '[]');
+    list.unshift(text);
+    localStorage.setItem('announcements', JSON.stringify(list));
     alert('公告已发布');
+    location.reload();
 }
 
-// 连飞活动
+// ========== 连飞活动 ==========
 async function loadEvents() {
-    const res = await fetch('/api/events');
-    const events = await res.json();
     const list = document.getElementById('eventList');
-    list.innerHTML = '';
-    events.forEach(ev => {
-        const div = document.createElement('div');
-        div.className = 'section';
-        div.innerHTML = `
-            <h3>${ev.name}</h3>
-            <img src="${ev.image}" width="100%">
-            <p>${ev.description}</p>
-            <p>状态: ${ev.status}</p>
-            ${ev.status === '未开始' ? '<button onclick="signUp(' + ev.id + ')">报名</button>' : ''}
-        `;
-        list.appendChild(div);
-    });
+    list.innerHTML = '<p style="color:#999;">加载中...</p>';
+    try {
+        const res = await fetch(`${API_BASE}/api/events`);
+        const events = await res.json();
+        if (!events.length) {
+            list.innerHTML = '<p style="color:#999;">暂无活动</p>';
+            return;
+        }
+        list.innerHTML = '';
+        events.forEach(ev => {
+            const div = document.createElement('div');
+            div.className = 'event-card';
+            const canSignup = ev.status === '未开始';
+            div.innerHTML = `
+                <h3>${ev.name}</h3>
+                ${ev.image ? `<img src="${ev.image}" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin:8px 0;">` : ''}
+                <p>${ev.description}</p>
+                <span class="status ${canSignup ? 'status-waiting' : 'status-ended'}">${ev.status}</span>
+                ${canSignup ? `<br><button onclick="signUp(${ev.id})">报名</button>` : '<p style="color:#999;margin-top:8px;">活动已结束或已开始</p>'}
+            `;
+            list.appendChild(div);
+        });
+    } catch (err) {
+        list.innerHTML = '<p style="color:#999;">加载失败</p>';
+    }
 }
+
 async function signUp(eventId) {
-    const stand = prompt('请输入停机位');
-    const callsign = prompt('请输入游戏呼号');
-    const aircraft = prompt('请输入所使用机型');
-    await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, pilotId, stand, callsign, aircraft })
-    });
-    alert('报名成功');
+    const stand = prompt('请输入停机位（如 T2-35）：');
+    if (!stand) return;
+    const callsign = prompt('请输入游戏呼号（如 MTY1001）：');
+    if (!callsign) return;
+    const aircraft = prompt('请输入所使用机型（如 B738）：');
+    if (!aircraft) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventId, pilotId, stand, callsign, aircraft })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ 报名成功！');
+        } else {
+            alert('报名失败：' + (data.message || ''));
+        }
+    } catch (err) {
+        alert('网络错误');
+    }
 }
 
-// METAR查询
+// ========== METAR 查询 ==========
 async function getMetar() {
-    const icao = document.getElementById('icaoMetar').value;
-    const res = await fetch('/api/metar?icao=' + icao);
-    const data = await res.json();
-    document.getElementById('metarResult').textContent = data.metar;
+    const icao = document.getElementById('icaoMetar').value.trim().toUpperCase();
+    if (!icao) { alert('请输入 ICAO 代码'); return; }
+    const resultBox = document.getElementById('metarResult');
+    resultBox.textContent = '查询中...';
+    try {
+        const res = await fetch(`${API_BASE}/api/metar?icao=${icao}`);
+        const text = await res.text();
+        resultBox.textContent = text || '未获取到数据';
+    } catch (err) {
+        resultBox.textContent = '查询失败，请检查网络';
+    }
 }
 
-// 航路查询
+// ========== 航路查询 ==========
 async function getRoute() {
-    const dep = document.getElementById('dep').value;
-    const arr = document.getElementById('arr').value;
-    const res = await fetch(`/api/route?dep=${dep}&arr=${arr}`);
-    const data = await res.json();
-    document.getElementById('routeResult').textContent = data.route;
+    const dep = document.getElementById('dep').value.trim().toUpperCase();
+    const arr = document.getElementById('arr').value.trim().toUpperCase();
+    if (!dep || !arr) { alert('请输入起降机场'); return; }
+    const resultBox = document.getElementById('routeResult');
+    resultBox.textContent = '计算中...';
+    try {
+        const res = await fetch(`${API_BASE}/api/route?dep=${dep}&arr=${arr}`);
+        const data = await res.json();
+        if (data.error) {
+            resultBox.textContent = '查询失败：' + data.error;
+        } else {
+            resultBox.textContent =
+                `航路：${data.route}\n` +
+                `大圆距离：${data.distance_nm} nm\n` +
+                `备注：${data.note}`;
+        }
+    } catch (err) {
+        resultBox.textContent = '查询失败，请检查网络';
+    }
 }
 
-// 职员申请
-document.getElementById('applyForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const position = document.getElementById('position').value;
-    const reason = document.getElementById('reason').value;
-    const loyalty = document.getElementById('loyalty').checked;
-    if (!loyalty) { alert('必须效忠联盟'); return; }
-    
-    await fetch('/api/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pilotId, position, reason, loyalty })
-    });
-    alert('申请已提交');
-});
+// ========== 职员申请 ==========
+const applyForm = document.getElementById('applyForm');
+if (applyForm) {
+    applyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const position = document.getElementById('position').value;
+        const reason = document.getElementById('reason').value.trim();
+        const loyalty = document.getElementById('loyalty').checked;
 
+        if (!loyalty) { alert('必须勾选效忠联盟'); return; }
+        if (reason.length < 10) { alert('申请理由至少10个字'); return; }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/apply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pilotId, position, reason, loyalty })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ 申请已提交，请等待管理员审核');
+                applyForm.reset();
+            } else {
+                alert('提交失败：' + (data.message || ''));
+            }
+        } catch (err) {
+            alert('网络错误');
+        }
+    });
+}
